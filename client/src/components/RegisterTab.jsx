@@ -27,8 +27,17 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
   };
 
   const handlePrint = () => {
-    if (!registered) return;
+    const original = document.getElementById('stamp-card-print');
+    if (!original) return;
+    const clone = original.cloneNode(true);
+    clone.id = 'stamp-card-print-clone';
+    document.body.appendChild(clone);
+    document.body.classList.add('printing-stamp-card');
+    
     window.print();
+    
+    document.body.classList.remove('printing-stamp-card');
+    document.body.removeChild(clone);
   };
 
   return (
@@ -113,7 +122,9 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
       {registered && (
         <div className="mt-6 flex flex-col items-center">
           <p className="text-xs text-slate-500 mb-3 font-medium">スタンプカードプレビュー（初回分）</p>
-          <StampCard patient={registered} />
+          <div id="stamp-card-print" className="w-full max-w-2xl">
+            <StampCard patient={registered} />
+          </div>
           
           <button 
             type="button" 

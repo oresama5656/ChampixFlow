@@ -31,7 +31,17 @@ function DispenseModal({ patient, onClose, onDispense }) {
   };
 
   const handlePrint = () => {
+    const original = document.getElementById('stamp-card-print');
+    if (!original) return;
+    const clone = original.cloneNode(true);
+    clone.id = 'stamp-card-print-clone';
+    document.body.appendChild(clone);
+    document.body.classList.add('printing-stamp-card');
+    
     window.print();
+    
+    document.body.classList.remove('printing-stamp-card');
+    document.body.removeChild(clone);
   };
 
   return (
