@@ -16,7 +16,7 @@ function OverviewTab({ patients, ganttData, onToggleVisible, onArchive, onDispen
         patients={patients}
         onToggleVisible={onToggleVisible}
         onArchive={onArchive}
-        onDispenseSuccess={() => {}} // データは App.jsx で一元管理
+        onDispense={onDispense}
       />
 
       {/* 右ペイン：ガントチャートカレンダー */}

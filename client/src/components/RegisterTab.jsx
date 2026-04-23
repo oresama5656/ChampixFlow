@@ -85,19 +85,9 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
 
           <div className="flex gap-2 pt-2">
             {/* 登録ボタン */}
-            <button type="submit" disabled={loading} className="btn-primary flex-1">
+            <button type="submit" disabled={loading} className="btn-primary w-full">
               {loading ? '登録中...' : '登録する'}
             </button>
-            {/* 登録後：案内印刷ボタン */}
-            {registered && (
-              <button type="button" onClick={handlePrint} className="btn-ghost flex items-center gap-1.5">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round"
-                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                案内印刷
-              </button>
-            )}
           </div>
         </form>
 
@@ -116,9 +106,21 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
 
       {/* 印刷プレビュー（画面上は縮小表示、印刷時はA5フルサイズ） */}
       {registered && (
-        <div className="mt-4">
-          <p className="text-xs text-slate-500 mb-2 text-center">スタンプカードプレビュー（印刷時はA5横）</p>
+        <div className="mt-6 flex flex-col items-center">
+          <p className="text-xs text-slate-500 mb-3 font-medium">スタンプカードプレビュー（初回分）</p>
           <StampCard patient={registered} />
+          
+          <button 
+            type="button" 
+            onClick={handlePrint} 
+            className="mt-6 w-full max-w-sm bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 shadow-lg transition transform hover:scale-105 print:hidden"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round"
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            スタンプカードを印刷する
+          </button>
         </div>
       )}
     </div>

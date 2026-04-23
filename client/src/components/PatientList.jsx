@@ -26,7 +26,7 @@ function daysToWeeks(days) {
 /**
  * PatientList – 左ペインに表示する患者一覧
  */
-function PatientList({ patients, onToggleVisible, onArchive, onDispenseSuccess }) {
+function PatientList({ patients, onToggleVisible, onArchive, onDispense }) {
   const [selectedId, setSelectedId] = useState(null); // 交付モーダル対象
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -69,7 +69,8 @@ function PatientList({ patients, onToggleVisible, onArchive, onDispenseSuccess }
           return (
             <li
               key={patient.id}
-              className={`px-4 py-3 transition-colors duration-150 ${
+              onClick={() => setSelectedId(patient.id)}
+              className={`px-4 py-3 transition-colors duration-150 cursor-pointer ${
                 isHidden ? 'opacity-40' : 'hover:bg-surface-700/50'
               }`}
             >
@@ -89,18 +90,18 @@ function PatientList({ patients, onToggleVisible, onArchive, onDispenseSuccess }
                 )}
               </div>
 
-              {/* ボタン群 */}
+              {/* ボタン群（クリックイベントが親の li に伝播しないよう stopPropagation する） */}
               <div className="flex gap-1.5">
                 {/* 来局ボタン */}
                 <button
-                  onClick={() => setSelectedId(patient.id)}
+                  onClick={(e) => { e.stopPropagation(); setSelectedId(patient.id); }}
                   className="btn-primary text-xs py-1 px-2.5"
                 >
                   来局記録
                 </button>
                 {/* 表示/非表示トグル */}
                 <button
-                  onClick={() => onToggleVisible(patient.id)}
+                  onClick={(e) => { e.stopPropagation(); onToggleVisible(patient.id); }}
                   title={isHidden ? 'カレンダーに表示' : 'カレンダーから非表示'}
                   className="btn-ghost text-xs py-1 px-2"
                 >
@@ -119,7 +120,7 @@ function PatientList({ patients, onToggleVisible, onArchive, onDispenseSuccess }
                 </button>
                 {/* アーカイブボタン */}
                 <button
-                  onClick={() => onArchive(patient.id)}
+                  onClick={(e) => { e.stopPropagation(); onArchive(patient.id); }}
                   title="履歴へ移動"
                   className="btn-ghost text-xs py-1 px-2 text-slate-500 hover:text-danger-400"
                 >
@@ -138,9 +139,11 @@ function PatientList({ patients, onToggleVisible, onArchive, onDispenseSuccess }
         <DispenseModal
           patient={patients.find(p => p.id === selectedId)}
           onClose={() => setSelectedId(null)}
-          onSuccess={() => {
-            setSelectedId(null);
-            onDispenseSuccess();
+          onDispense={async (pid, form) => {
+            const success = await onDispense(pid, form);
+            if (success) {
+              setSelectedId(null);
+            }
           }}
         />
       )}

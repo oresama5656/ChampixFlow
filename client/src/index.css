@@ -69,3 +69,37 @@
            transition-colors duration-200;
   }
 }
+
+/* =========================================
+   印刷専用スタイル
+   - 画面上の余計なUIをすべて非表示
+   - #stamp-card-print のみをA5横で出力
+========================================= */
+@media print {
+  @page {
+    size: A5 landscape;
+    margin: 5mm;
+  }
+  body {
+    background-color: white !important;
+    color: black !important;
+    margin: 0;
+    padding: 0;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #stamp-card-print, #stamp-card-print * {
+    visibility: visible;
+  }
+  #stamp-card-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    transform: scale(1.05); /* 余白に合わせて微調整 */
+    transform-origin: top left;
+  }
+}
