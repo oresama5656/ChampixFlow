@@ -46,7 +46,6 @@ function DispenseModal({ patient, onClose, onDispense }) {
   };
 
   const handlePrint = () => {
-    // 連続印刷を防止したいが、状態管理がないためとりあえず取得して存在確認
     const cardEl = document.getElementById('modal-stamp-card');
     if (!cardEl) return;
     
@@ -55,34 +54,16 @@ function DispenseModal({ patient, onClose, onDispense }) {
     document.body.appendChild(clone);
     document.body.classList.add('printing-stamp-card');
     
-    let isCleanedUp = false;
-    const cleanUp = () => {
-      if (isCleanedUp) return;
-      isCleanedUp = true;
-      document.body.classList.remove('printing-stamp-card');
-      if (document.body.contains(clone)) {
-        document.body.removeChild(clone);
-      }
-      window.removeEventListener('afterprint', cleanUp);
-      window.removeEventListener('focus', cleanUpFallback);
-    };
-
-    const cleanUpFallback = () => {
-      setTimeout(cleanUp, 100);
-    };
-
-    window.addEventListener('afterprint', cleanUp);
-    
-    // 降级方案: afterprintが発火しないブラウザ対策
-    window.addEventListener('focus', cleanUpFallback);
-
-    // レンダリング時間を確保するために待機
     setTimeout(() => {
       window.print();
       
-      // 印刷ダイアログから戻ったあとにクリーンアップ (非同期環境対策 最終手段)
-      setTimeout(cleanUp, 500);
-    }, 200);
+      setTimeout(() => {
+        document.body.classList.remove('printing-stamp-card');
+        if (document.body.contains(clone)) {
+          document.body.removeChild(clone);
+        }
+      }, 100);
+    }, 100);
   };
 
   return (
@@ -209,8 +190,8 @@ function DispenseModal({ patient, onClose, onDispense }) {
 
           <div className="flex-1 flex items-center justify-center bg-surface-800 rounded-xl border border-surface-700 p-4 print:border-none print:bg-transparent print:p-0">
             {/* スタンプカード自体 */}
-            <div id="stamp-card-print" className="w-full">
-              <StampCard patient={patient} overrideWeek={parseInt(form.week, 10)} />
+            <div className="w-full">
+              <StampCard patient={patient} overrideWeek={parseInt(form.week, 10)} printId="modal-stamp-card" />
             </div>
           </div>
           

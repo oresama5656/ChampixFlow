@@ -115,6 +115,8 @@ export function calcNextDate(dispenseDate, days) {
 
 /** 患者の最新交付情報からステータスを自動判定する */
 export function calcStatus(patient, latestDispensing) {
+  if (patient.status === 'archived') return 'archived';
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
