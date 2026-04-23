@@ -91,20 +91,29 @@ function getEmptyData() {
 
 /** 日付文字列に n 日加算した文字列を返す */
 function addDays(dateStr, n) {
-  const d = new Date(dateStr + 'T00:00:00');
+  if (!dateStr) return "";
+  // すでにTが含まれる場合はそのまま、含まれない場合は今日として扱うためにT00:00:00を付与
+  const isoStr = (typeof dateStr === 'string' && !dateStr.includes('T')) ? `${dateStr}T00:00:00` : dateStr;
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return ""; 
   d.setDate(d.getDate() + n);
   return d.toISOString().split('T')[0];
 }
 
 /** 服用開始日から12週間のスケジュールを計算する */
 export function calcSchedule(startDate) {
-  const start = new Date(startDate + 'T00:00:00');
+  if (!startDate) return { start_date: "", phase1_end: "", phase2_end: "", maintenance_start: "", treatment_end: "" };
+  
+  const isoStr = (typeof startDate === 'string' && !startDate.includes('T')) ? `${startDate}T00:00:00` : startDate;
+  const start = new Date(isoStr);
+  const isValid = !isNaN(start.getTime());
+  
   return {
     start_date: startDate,
-    phase1_end: addDays(start, 2),   // Day1-3終了
-    phase2_end: addDays(start, 6),   // Day4-7終了
-    maintenance_start: addDays(start, 7),  // Day8開始
-    treatment_end: addDays(start, 83),     // 12週目最終日
+    phase1_end: isValid ? addDays(startDate, 2) : "",   
+    phase2_end: isValid ? addDays(startDate, 6) : "",   
+    maintenance_start: isValid ? addDays(startDate, 7) : "",  
+    treatment_end: isValid ? addDays(startDate, 83) : "",     
   };
 }
 
@@ -280,17 +289,20 @@ export function buildGanttData(data) {
       });
     const latest = pDisp[0] || null;
     const schedule = calcSchedule(p.start_date);
-    const nextDate = latest ? calcNextDate(latest.dispense_date, latest.days) : null;
+    if (!schedule.maintenance_start || !schedule.treatment_end) return; // スケール計算できない場合はスキップ
+
+    const nextDate = latest ? calcNextDate(p.start_date, latest.days) : null;
     const status = calcStatus(p, latest);
 
     // 実線バー（交付済み）
     if (latest) {
+      const actualNextDate = calcNextDate(latest.dispense_date, latest.days);
       bars.push({
         patient_id: p.id,
         patient_name: p.name,
         type: 'solid',
         start: latest.dispense_date,
-        end: nextDate,
+        end: actualNextDate,
         days: latest.days,
         visible: p.visible,
         status,
@@ -298,24 +310,28 @@ export function buildGanttData(data) {
     }
 
     // 透明バー（次回予定）
-    if (nextDate) {
-      const nextEnd = calcNextDate(nextDate, latest?.days || 14);
+    if (latest) {
+      const nextDate = calcNextDate(latest.dispense_date, latest.days);
+      const nextEnd = calcNextDate(nextDate, latest.days || 14);
       bars.push({
         patient_id: p.id,
         patient_name: p.name,
         type: 'ghost',
         start: nextDate,
         end: nextEnd,
-        days: latest?.days || 14,
+        days: latest.days || 14,
         visible: p.visible,
         status,
       });
     }
 
     // 在庫ヒートマップ：維持期間（Day8〜12週）の1.0mg×2錠/日を集計
-    const mStart = new Date(schedule.maintenance_start);
-    const tEnd = new Date(schedule.treatment_end);
+    const mStart = new Date(schedule.maintenance_start + 'T00:00:00');
+    const tEnd = new Date(schedule.treatment_end + 'T00:00:00');
+    if (isNaN(mStart.getTime()) || isNaN(tEnd.getTime())) return;
+
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     let cur = new Date(Math.max(mStart.getTime(), today.getTime()));
     while (cur <= tEnd) {
       const key = cur.toISOString().split('T')[0];
