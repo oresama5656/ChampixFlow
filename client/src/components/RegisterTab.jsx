@@ -34,10 +34,14 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
     document.body.appendChild(clone);
     document.body.classList.add('printing-stamp-card');
     
-    window.print();
-    
-    document.body.classList.remove('printing-stamp-card');
-    document.body.removeChild(clone);
+    // レンダリング時間を確保するために100ms待機
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('printing-stamp-card');
+      if (document.body.contains(clone)) {
+        document.body.removeChild(clone);
+      }
+    }, 100);
   };
 
   return (

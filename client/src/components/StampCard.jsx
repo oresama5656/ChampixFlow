@@ -43,7 +43,7 @@ function getWeekInfo(startDate, weekNum) {
  * StampCard – A5横向きの患者向けスタンプカード
  * 画面上は縮小表示、印刷時はA5フルサイズ
  */
-function StampCard({ patient }) {
+function StampCard({ patient, overrideWeek }) {
   const settings = JSON.parse(localStorage.getItem('champixSettings') || '{}');
   const pharmacyName = settings.name || '薬局名';
   const pharmacyTel  = settings.tel  || '000-0000-0000';
@@ -54,7 +54,18 @@ function StampCard({ patient }) {
   today.setHours(0, 0, 0, 0);
   const start = new Date(patient.start_date + 'T00:00:00');
   const elapsedDays = Math.floor((today - start) / (1000 * 60 * 60 * 24));
-  const currentWeek = Math.min(Math.floor(elapsedDays / 7), 11); // 0-indexed
+  
+  let currentWeek;
+  if (typeof overrideWeek === 'number' && !isNaN(overrideWeek)) {
+    // フォームで入力された週を優先（1-indexed なので -1）
+    currentWeek = Math.max(0, Math.min(11, overrideWeek - 1));
+  } else if (patient.latest_week) {
+    // 保存済みの最新の週の記録があればそれを利用
+    currentWeek = Math.max(0, Math.min(11, patient.latest_week - 1));
+  } else {
+    // なければ日数から計算
+    currentWeek = Math.min(Math.floor(elapsedDays / 7), 11); // 0-indexed
+  }
 
   // 最終週（禁煙達成予定日）
   const treatmentEnd = new Date(start);

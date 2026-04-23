@@ -83,46 +83,64 @@
   
   body.printing-stamp-card {
     width: 210mm !important;
-    height: 148mm !important;
+    height: 148.5mm !important; /* A5ぴったりに */
     overflow: hidden !important;
     background: white !important;
-    margin: 0;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
-  /* body直下の子要素のうち、対象のクローン以外を強制非表示 (2枚の白紙問題を解決) */
+  /* 全体的に背景色設定を強制 */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   body.printing-stamp-card > *:not(#stamp-card-print-clone) {
     display: none !important;
   }
   
   #stamp-card-print-clone {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    position: fixed !important;
+    display: block !important;
+    position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 210mm !important;
-    height: 148mm !important;
+    height: 148.5mm !important;
     margin: 0 !important;
     padding: 0 !important;
-    box-sizing: border-box !important;
     background: white !important;
     z-index: 9999 !important;
     visibility: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    overflow: hidden !important;
   }
   
+  /* カード本体の印刷用スタイル */
   #stamp-card-print-clone > div {
-    transform: scale(1.05); /* 余白に合わせてカードを拡大 */
-    transform-origin: center;
-    margin: 0 auto;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    transform: none !important; /* スケールによる端切れを防止 */
+    border: none !important;
+    border-radius: 0 !important;
   }
 
+  /* 背景印刷がオフの場合に備えて、白文字はすべて濃い色に強制 */
   #stamp-card-print-clone * {
     visibility: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    color: #1a1a1a !important; /* ほぼ黒 */
+    border-color: #999 !important;
+  }
+
+  /* ただし、背景色があるヘッダー内の文字は今のまま（背景が出るなら白文字で良い） */
+  #stamp-card-print-clone .bg-indigo-600 *,
+  #stamp-card-print-clone .bg-indigo-600 {
+    background-color: #4f46e5 !important;
+    color: white !important;
+  }
+
+  /* 背景がどうしても出ないブラウザへのフォールバック：ヘッダーに下線を引く */
+  #stamp-card-print-clone .bg-indigo-600 {
+    border-bottom: 2px solid #4f46e5 !important;
   }
 }

@@ -162,6 +162,7 @@ export function buildPatients(data) {
       last_dispense_date: latest?.dispense_date || null,
       last_days: latest?.days || null,
       last_is_starter: latest?.is_starter || 0,
+      latest_week: latest?.week || null,
     };
   });
 }
@@ -195,7 +196,7 @@ export function registerPatient(data, { name, start_date, memo }) {
 }
 
 /** 交付を追加 */
-export function addDispensing(data, patientId, { dispense_date, days, is_starter, memo }) {
+export function addDispensing(data, patientId, { dispense_date, days, is_starter, memo, week }) {
   const newDisp = {
     id: genId(),
     patient_id: patientId,
@@ -203,6 +204,7 @@ export function addDispensing(data, patientId, { dispense_date, days, is_starter
     days,
     is_starter: is_starter ? 1 : 0,
     memo: memo || '',
+    week: week ? parseInt(week, 10) : null,
     created_at: new Date().toISOString(),
   };
   data.dispensings.push(newDisp);

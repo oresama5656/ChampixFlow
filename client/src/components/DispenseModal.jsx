@@ -6,11 +6,26 @@ import StampCard from './StampCard.jsx';
  */
 function DispenseModal({ patient, onClose, onDispense }) {
   const today = new Date().toISOString().split('T')[0];
+  
+  let defaultWeek = 1;
+  if (patient?.start_date) {
+    const todayObj = new Date();
+    todayObj.setHours(0, 0, 0, 0);
+    const startObj = new Date(patient.start_date + 'T00:00:00');
+    const elapsedDays = Math.floor((todayObj - startObj) / (1000 * 60 * 60 * 24));
+    defaultWeek = Math.min(Math.max(Math.floor(elapsedDays / 7) + 1, 1), 12);
+  }
+  if (patient?.latest_week) {
+    const addedWeeks = patient?.last_days ? Math.max(1, Math.round(patient.last_days / 7)) : 2;
+    defaultWeek = Math.min(patient.latest_week + addedWeeks, 12);
+  }
+
   const [form, setForm] = useState({
     dispense_date: today,
     days: patient?.last_days || 14, // 前回と同じ日数をデフォルト
     is_starter: false,
     memo: '',
+    week: defaultWeek,
   });
   const [loading, setLoading] = useState(false);
 
@@ -38,10 +53,14 @@ function DispenseModal({ patient, onClose, onDispense }) {
     document.body.appendChild(clone);
     document.body.classList.add('printing-stamp-card');
     
-    window.print();
-    
-    document.body.classList.remove('printing-stamp-card');
-    document.body.removeChild(clone);
+    // レンダリング時間を確保するために100ms待機
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('printing-stamp-card');
+      if (document.body.contains(clone)) {
+        document.body.removeChild(clone);
+      }
+    }, 100);
   };
 
   return (
@@ -99,6 +118,23 @@ function DispenseModal({ patient, onClose, onDispense }) {
               />
             </div>
 
+            {/* 週数 */}
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                何週目ですか？ <span className="text-danger-400">*</span>
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={12}
+                value={form.week}
+                onChange={e => setForm(f => ({ ...f, week: e.target.value }))}
+                required
+                className="input"
+                placeholder="例: 4"
+              />
+            </div>
+
             {/* スターターキットフラグ */}
             <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-surface-600 bg-surface-700/50 hover:bg-surface-700 transition">
               <input
@@ -152,7 +188,7 @@ function DispenseModal({ patient, onClose, onDispense }) {
           <div className="flex-1 flex items-center justify-center bg-surface-800 rounded-xl border border-surface-700 p-4 print:border-none print:bg-transparent print:p-0">
             {/* スタンプカード自体 */}
             <div id="stamp-card-print" className="w-full">
-              <StampCard patient={patient} />
+              <StampCard patient={patient} overrideWeek={parseInt(form.week, 10)} />
             </div>
           </div>
           
