@@ -147,7 +147,11 @@ export function buildPatients(data) {
     // この患者の最新交付
     const pDisp = dispensings
       .filter(d => d.patient_id === p.id)
-      .sort((a, b) => b.dispense_date.localeCompare(a.dispense_date));
+      .sort((a, b) => {
+        const dateA = a.created_at || a.dispense_date;
+        const dateB = b.created_at || b.dispense_date;
+        return dateB.localeCompare(dateA);
+      });
     const latest = pDisp[0] || null;
 
     const schedule = calcSchedule(p.start_date);
@@ -168,7 +172,7 @@ export function buildPatients(data) {
 }
 
 /** 患者登録（スターターキット自動追加付き） */
-export function registerPatient(data, { name, start_date, memo }) {
+export function registerPatient(data, { name, start_date, memo, days }) {
   const patientId = genId();
   const newPatient = {
     id: patientId,
@@ -180,14 +184,15 @@ export function registerPatient(data, { name, start_date, memo }) {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
-  // 初回スターターキット14日分を自動追加
+  // 初回用として自動追加
   const starterDispensing = {
     id: genId() + 1,
     patient_id: patientId,
     dispense_date: start_date,
-    days: 14,
+    days: days ? parseInt(days, 10) : 14,
     is_starter: 1,
     memo: '初回スターターキット自動登録',
+    week: 1,
     created_at: new Date().toISOString(),
   };
   data.patients.push(newPatient);
@@ -235,7 +240,11 @@ export function archivePatient(data, patientId) {
 export function getDispensings(data, patientId) {
   return data.dispensings
     .filter(d => d.patient_id === patientId)
-    .sort((a, b) => b.dispense_date.localeCompare(a.dispense_date))
+    .sort((a, b) => {
+      const dateA = a.created_at || a.dispense_date;
+      const dateB = b.created_at || b.dispense_date;
+      return dateB.localeCompare(dateA);
+    })
     .map(d => ({ ...d, next_date: calcNextDate(d.dispense_date, d.days) }));
 }
 
@@ -252,7 +261,11 @@ export function buildGanttData(data) {
   activePatients.forEach(p => {
     const pDisp = data.dispensings
       .filter(d => d.patient_id === p.id)
-      .sort((a, b) => b.dispense_date.localeCompare(a.dispense_date));
+      .sort((a, b) => {
+        const dateA = a.created_at || a.dispense_date;
+        const dateB = b.created_at || b.dispense_date;
+        return dateB.localeCompare(dateA);
+      });
     const latest = pDisp[0] || null;
     const schedule = calcSchedule(p.start_date);
     const nextDate = latest ? calcNextDate(latest.dispense_date, latest.days) : null;
@@ -309,14 +322,14 @@ export function buildGanttData(data) {
 export function buildCSV(data) {
   const { patients, dispensings } = data;
   let csv = '\uFEFF'; // UTF-8 BOM
-  csv += '患者ID,患者名,服用開始日,ステータス,メモ,交付日,交付日数,スターターキット\n';
+  csv += '患者ID,患者名,服用開始日,ステータス,メモ,交付日,何週目,交付日数,スターターキット\n';
   patients.forEach(p => {
     const pDisp = dispensings.filter(d => d.patient_id === p.id);
     if (pDisp.length === 0) {
-      csv += `${p.id},"${p.name}",${p.start_date},${p.status},"${p.memo || ''}",,,いいえ\n`;
+      csv += `${p.id},"${p.name}",${p.start_date},${p.status},"${p.memo || ''}",,,,いいえ\n`;
     } else {
       pDisp.forEach(d => {
-        csv += `${p.id},"${p.name}",${p.start_date},${p.status},"${p.memo || ''}",${d.dispense_date},${d.days},${d.is_starter ? 'はい' : 'いいえ'}\n`;
+        csv += `${p.id},"${p.name}",${p.start_date},${p.status},"${p.memo || ''}",${d.dispense_date},${d.week || ''},${d.days},${d.is_starter ? 'はい' : 'いいえ'}\n`;
       });
     }
   });

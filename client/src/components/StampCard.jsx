@@ -43,7 +43,7 @@ function getWeekInfo(startDate, weekNum) {
  * StampCard – A5横向きの患者向けスタンプカード
  * 画面上は縮小表示、印刷時はA5フルサイズ
  */
-function StampCard({ patient, overrideWeek }) {
+function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
   const settings = JSON.parse(localStorage.getItem('champixSettings') || '{}');
   const pharmacyName = settings.name || '薬局名';
   const pharmacyTel  = settings.tel  || '000-0000-0000';
@@ -74,7 +74,7 @@ function StampCard({ patient, overrideWeek }) {
 
   return (
     <div
-      id="stamp-card-print"
+      id={printId}
       className="bg-white text-gray-900 rounded-xl overflow-hidden shadow-xl"
       style={{ width: '100%', maxWidth: '700px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}
     >

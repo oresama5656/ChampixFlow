@@ -1,0 +1,260 @@
+﻿diff --git a/client/src/components/DispenseModal.jsx b/client/src/components/DispenseModal.jsx
+index 3a9e8a8..8669d98 100644
+--- a/client/src/components/DispenseModal.jsx
++++ b/client/src/components/DispenseModal.jsx
+@@ -46,21 +46,43 @@ function DispenseModal({ patient, onClose, onDispense }) {
+   };
+ 
+   const handlePrint = () => {
+-    const original = document.getElementById('stamp-card-print');
+-    if (!original) return;
+-    const clone = original.cloneNode(true);
++    // 騾｣邯壼魂蛻ｷ繧帝亟豁｢縺励◆縺・′縲∫憾諷狗ｮ｡逅・′縺ｪ縺・◆繧√→繧翫≠縺医★蜿門ｾ励＠縺ｦ蟄伜惠遒ｺ隱・+    const cardEl = document.getElementById('modal-stamp-card');
++    if (!cardEl) return;
++    
++    const clone = cardEl.cloneNode(true);
+     clone.id = 'stamp-card-print-clone';
+     document.body.appendChild(clone);
+     document.body.classList.add('printing-stamp-card');
+     
+-    // 繝ｬ繝ｳ繝繝ｪ繝ｳ繧ｰ譎る俣繧堤｢ｺ菫昴☆繧九◆繧√↓100ms蠕・ｩ・-    setTimeout(() => {
+-      window.print();
++    let isCleanedUp = false;
++    const cleanUp = () => {
++      if (isCleanedUp) return;
++      isCleanedUp = true;
+       document.body.classList.remove('printing-stamp-card');
+       if (document.body.contains(clone)) {
+         document.body.removeChild(clone);
+       }
+-    }, 100);
++      window.removeEventListener('afterprint', cleanUp);
++      window.removeEventListener('focus', cleanUpFallback);
++    };
++
++    const cleanUpFallback = () => {
++      setTimeout(cleanUp, 100);
++    };
++
++    window.addEventListener('afterprint', cleanUp);
++    
++    // 髯咲ｺｧ譁ｹ譯・ afterprint縺檎匱轣ｫ縺励↑縺・ヶ繝ｩ繧ｦ繧ｶ蟇ｾ遲・+    window.addEventListener('focus', cleanUpFallback);
++
++    // 繝ｬ繝ｳ繝繝ｪ繝ｳ繧ｰ譎る俣繧堤｢ｺ菫昴☆繧九◆繧√↓蠕・ｩ・+    setTimeout(() => {
++      window.print();
++      
++      // 蜊ｰ蛻ｷ繝繧､繧｢繝ｭ繧ｰ縺九ｉ謌ｻ縺｣縺溘≠縺ｨ縺ｫ繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・ (髱槫酔譛溽腸蠅・ｯｾ遲・譛邨よ焔谿ｵ)
++      setTimeout(cleanUp, 500);
++    }, 200);
+   };
+ 
+   return (
+diff --git a/client/src/components/RegisterTab.jsx b/client/src/components/RegisterTab.jsx
+index 8d530b6..2e536e2 100644
+--- a/client/src/components/RegisterTab.jsx
++++ b/client/src/components/RegisterTab.jsx
+@@ -9,6 +9,7 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
+   const [form, setForm] = useState({
+     name: '',
+     start_date: today,
++    days: 14,
+     memo: '',
+   });
+   const [registered, setRegistered] = useState(null); // 逋ｻ骭ｲ蠕後・繝ｬ繝薙Η繝ｼ逕ｨ
+@@ -21,27 +22,49 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
+       setForm({
+         name: '',
+         start_date: today,
++        days: 14,
+         memo: '',
+       });
+     }
+   };
+ 
+   const handlePrint = () => {
+-    const original = document.getElementById('stamp-card-print');
+-    if (!original) return;
+-    const clone = original.cloneNode(true);
++    const cardEl = document.getElementById('register-stamp-card');
++    if (!cardEl) return;
++    
++    const clone = cardEl.cloneNode(true);
+     clone.id = 'stamp-card-print-clone';
+     document.body.appendChild(clone);
+     document.body.classList.add('printing-stamp-card');
+     
+-    // 繝ｬ繝ｳ繝繝ｪ繝ｳ繧ｰ譎る俣繧堤｢ｺ菫昴☆繧九◆繧√↓100ms蠕・ｩ・-    setTimeout(() => {
+-      window.print();
++    let isCleanedUp = false;
++    const cleanUp = () => {
++      if (isCleanedUp) return;
++      isCleanedUp = true;
+       document.body.classList.remove('printing-stamp-card');
+       if (document.body.contains(clone)) {
+         document.body.removeChild(clone);
+       }
+-    }, 100);
++      window.removeEventListener('afterprint', cleanUp);
++      window.removeEventListener('focus', cleanUpFallback);
++    };
++
++    const cleanUpFallback = () => {
++      setTimeout(cleanUp, 100);
++    };
++
++    window.addEventListener('afterprint', cleanUp);
++    
++    // 髯咲ｺｧ譁ｹ譯・ afterprint縺檎匱轣ｫ縺励↑縺・ヶ繝ｩ繧ｦ繧ｶ蟇ｾ遲・+    window.addEventListener('focus', cleanUpFallback);
++
++    // 繝ｬ繝ｳ繝繝ｪ繝ｳ繧ｰ譎る俣繧堤｢ｺ菫昴☆繧九◆繧√↓蠕・ｩ・+    setTimeout(() => {
++      window.print();
++      
++      // 蜊ｰ蛻ｷ繝繧､繧｢繝ｭ繧ｰ縺九ｉ謌ｻ縺｣縺溘≠縺ｨ縺ｫ繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・
++      setTimeout(cleanUp, 500);
++    }, 200);
+   };
+ 
+   return (
+@@ -89,6 +112,23 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
+             )}
+           </div>
+ 
++          {/* 蛻晏屓莠､莉俶律謨ｰ */}
++          <div>
++            <label className="block text-xs font-medium text-slate-300 mb-1">
++              蛻晏屓莠､莉俶律謨ｰ <span className="text-danger-400">*</span>
++            </label>
++            <input
++              type="number"
++              min={1}
++              max={90}
++              required
++              placeholder="萓・ 14"
++              value={form.days}
++              onChange={e => setForm(f => ({ ...f, days: e.target.value }))}
++              className="input"
++            />
++          </div>
++
+           {/* 繝｡繝｢ */}
+           <div>
+             <label className="block text-xs font-medium text-slate-300 mb-1">繝｡繝｢・井ｻｻ諢擾ｼ・/label>
+@@ -126,8 +166,8 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
+       {registered && (
+         <div className="mt-6 flex flex-col items-center">
+           <p className="text-xs text-slate-500 mb-3 font-medium">繧ｹ繧ｿ繝ｳ繝励き繝ｼ繝峨・繝ｬ繝薙Η繝ｼ・亥・蝗槫・・・/p>
+-          <div id="stamp-card-print" className="w-full max-w-2xl">
+-            <StampCard patient={registered} />
++          <div className="w-full max-w-2xl">
++            <StampCard patient={registered} printId="register-stamp-card" />
+           </div>
+           
+           <button 
+diff --git a/client/src/components/StampCard.jsx b/client/src/components/StampCard.jsx
+index 31b9f0f..3d2d04d 100644
+--- a/client/src/components/StampCard.jsx
++++ b/client/src/components/StampCard.jsx
+@@ -43,7 +43,7 @@ function getWeekInfo(startDate, weekNum) {
+  * StampCard 窶・A5讓ｪ蜷代″縺ｮ謔｣閠・髄縺代せ繧ｿ繝ｳ繝励き繝ｼ繝・  * 逕ｻ髱｢荳翫・邵ｮ蟆剰｡ｨ遉ｺ縲∝魂蛻ｷ譎ゅ・A5繝輔Ν繧ｵ繧､繧ｺ
+  */
+-function StampCard({ patient, overrideWeek }) {
++function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
+   const settings = JSON.parse(localStorage.getItem('champixSettings') || '{}');
+   const pharmacyName = settings.name || '阮ｬ螻蜷・;
+   const pharmacyTel  = settings.tel  || '000-0000-0000';
+@@ -74,7 +74,7 @@ function StampCard({ patient, overrideWeek }) {
+ 
+   return (
+     <div
+-      id="stamp-card-print"
++      id={printId}
+       className="bg-white text-gray-900 rounded-xl overflow-hidden shadow-xl"
+       style={{ width: '100%', maxWidth: '700px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}
+     >
+diff --git a/client/src/lib/dataManager.js b/client/src/lib/dataManager.js
+index 535525b..9c1d094 100644
+--- a/client/src/lib/dataManager.js
++++ b/client/src/lib/dataManager.js
+@@ -147,7 +147,11 @@ export function buildPatients(data) {
+     // 縺薙・謔｣閠・・譛譁ｰ莠､莉・     const pDisp = dispensings
+       .filter(d => d.patient_id === p.id)
+-      .sort((a, b) => b.dispense_date.localeCompare(a.dispense_date));
++      .sort((a, b) => {
++        const dateA = a.created_at || a.dispense_date;
++        const dateB = b.created_at || b.dispense_date;
++        return dateB.localeCompare(dateA);
++      });
+     const latest = pDisp[0] || null;
+ 
+     const schedule = calcSchedule(p.start_date);
+@@ -168,7 +172,7 @@ export function buildPatients(data) {
+ }
+ 
+ /** 謔｣閠・匳骭ｲ・医せ繧ｿ繝ｼ繧ｿ繝ｼ繧ｭ繝・ヨ閾ｪ蜍戊ｿｽ蜉莉倥″・・*/
+-export function registerPatient(data, { name, start_date, memo }) {
++export function registerPatient(data, { name, start_date, memo, days }) {
+   const patientId = genId();
+   const newPatient = {
+     id: patientId,
+@@ -180,14 +184,15 @@ export function registerPatient(data, { name, start_date, memo }) {
+     created_at: new Date().toISOString(),
+     updated_at: new Date().toISOString(),
+   };
+-  // 蛻晏屓繧ｹ繧ｿ繝ｼ繧ｿ繝ｼ繧ｭ繝・ヨ14譌･蛻・ｒ閾ｪ蜍戊ｿｽ蜉
++  // 蛻晏屓逕ｨ縺ｨ縺励※閾ｪ蜍戊ｿｽ蜉
+   const starterDispensing = {
+     id: genId() + 1,
+     patient_id: patientId,
+     dispense_date: start_date,
+-    days: 14,
++    days: days ? parseInt(days, 10) : 14,
+     is_starter: 1,
+     memo: '蛻晏屓繧ｹ繧ｿ繝ｼ繧ｿ繝ｼ繧ｭ繝・ヨ閾ｪ蜍慕匳骭ｲ',
++    week: 1,
+     created_at: new Date().toISOString(),
+   };
+   data.patients.push(newPatient);
+@@ -235,7 +240,11 @@ export function archivePatient(data, patientId) {
+ export function getDispensings(data, patientId) {
+   return data.dispensings
+     .filter(d => d.patient_id === patientId)
+-    .sort((a, b) => b.dispense_date.localeCompare(a.dispense_date))
++    .sort((a, b) => {
++      const dateA = a.created_at || a.dispense_date;
++      const dateB = b.created_at || b.dispense_date;
++      return dateB.localeCompare(dateA);
++    })
+     .map(d => ({ ...d, next_date: calcNextDate(d.dispense_date, d.days) }));
+ }
+ 
+@@ -252,7 +261,11 @@ export function buildGanttData(data) {
+   activePatients.forEach(p => {
+     const pDisp = data.dispensings
+       .filter(d => d.patient_id === p.id)
+-      .sort((a, b) => b.dispense_date.localeCompare(a.dispense_date));
++      .sort((a, b) => {
++        const dateA = a.created_at || a.dispense_date;
++        const dateB = b.created_at || b.dispense_date;
++        return dateB.localeCompare(dateA);
++      });
+     const latest = pDisp[0] || null;
+     const schedule = calcSchedule(p.start_date);
+     const nextDate = latest ? calcNextDate(latest.dispense_date, latest.days) : null;
+@@ -309,14 +322,14 @@ export function buildGanttData(data) {
+ export function buildCSV(data) {
+   const { patients, dispensings } = data;
+   let csv = '\uFEFF'; // UTF-8 BOM
+-  csv += '謔｣閠・D,謔｣閠・錐,譛咲畑髢句ｧ区律,繧ｹ繝・・繧ｿ繧ｹ,繝｡繝｢,莠､莉俶律,莠､莉俶律謨ｰ,繧ｹ繧ｿ繝ｼ繧ｿ繝ｼ繧ｭ繝・ヨ\n';
++  csv += '謔｣閠・D,謔｣閠・錐,譛咲畑髢句ｧ区律,繧ｹ繝・・繧ｿ繧ｹ,繝｡繝｢,莠､莉俶律,菴暮ｱ逶ｮ,莠､莉俶律謨ｰ,繧ｹ繧ｿ繝ｼ繧ｿ繝ｼ繧ｭ繝・ヨ\n';
+   patients.forEach(p => {
+     const pDisp = dispensings.filter(d => d.patient_id === p.id);
+     if (pDisp.length === 0) {
+-      csv += `${p.id},"${p.name}",${p.start_date},${p.status},"${p.memo || ''}",,,縺・＞縺・n`;
++      csv += `${p.id},"${p.name}",${p.start_date},${p.status},"${p.memo || ''}",,,,縺・＞縺・n`;
+     } else {
+       pDisp.forEach(d => {
+-        csv += `${p.id},"${p.name}",${p.start_date},${p.status},"${p.memo || ''}",${d.dispense_date},${d.days},${d.is_starter ? '縺ｯ縺・ : '縺・＞縺・}\n`;
++        csv += `${p.id},"${p.name}",${p.start_date},${p.status},"${p.memo || ''}",${d.dispense_date},${d.week || ''},${d.days},${d.is_starter ? '縺ｯ縺・ : '縺・＞縺・}\n`;
+       });
+     }
+   });

@@ -9,6 +9,7 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
   const [form, setForm] = useState({
     name: '',
     start_date: today,
+    days: 14,
     memo: '',
   });
   const [registered, setRegistered] = useState(null); // 登録後プレビュー用
@@ -21,27 +22,49 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
       setForm({
         name: '',
         start_date: today,
+        days: 14,
         memo: '',
       });
     }
   };
 
   const handlePrint = () => {
-    const original = document.getElementById('stamp-card-print');
-    if (!original) return;
-    const clone = original.cloneNode(true);
+    const cardEl = document.getElementById('register-stamp-card');
+    if (!cardEl) return;
+    
+    const clone = cardEl.cloneNode(true);
     clone.id = 'stamp-card-print-clone';
     document.body.appendChild(clone);
     document.body.classList.add('printing-stamp-card');
     
-    // レンダリング時間を確保するために100ms待機
-    setTimeout(() => {
-      window.print();
+    let isCleanedUp = false;
+    const cleanUp = () => {
+      if (isCleanedUp) return;
+      isCleanedUp = true;
       document.body.classList.remove('printing-stamp-card');
       if (document.body.contains(clone)) {
         document.body.removeChild(clone);
       }
-    }, 100);
+      window.removeEventListener('afterprint', cleanUp);
+      window.removeEventListener('focus', cleanUpFallback);
+    };
+
+    const cleanUpFallback = () => {
+      setTimeout(cleanUp, 100);
+    };
+
+    window.addEventListener('afterprint', cleanUp);
+    
+    // 降级方案: afterprintが発火しないブラウザ対策
+    window.addEventListener('focus', cleanUpFallback);
+
+    // レンダリング時間を確保するために待機
+    setTimeout(() => {
+      window.print();
+      
+      // 印刷ダイアログから戻ったあとにクリーンアップ
+      setTimeout(cleanUp, 500);
+    }, 200);
   };
 
   return (
@@ -89,6 +112,23 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
             )}
           </div>
 
+          {/* 初回交付日数 */}
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              初回交付日数 <span className="text-danger-400">*</span>
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={90}
+              required
+              placeholder="例: 14"
+              value={form.days}
+              onChange={e => setForm(f => ({ ...f, days: e.target.value }))}
+              className="input"
+            />
+          </div>
+
           {/* メモ */}
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1">メモ（任意）</label>
@@ -126,8 +166,8 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
       {registered && (
         <div className="mt-6 flex flex-col items-center">
           <p className="text-xs text-slate-500 mb-3 font-medium">スタンプカードプレビュー（初回分）</p>
-          <div id="stamp-card-print" className="w-full max-w-2xl">
-            <StampCard patient={registered} />
+          <div className="w-full max-w-2xl">
+            <StampCard patient={registered} printId="register-stamp-card" />
           </div>
           
           <button 
