@@ -148,7 +148,7 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
  */
 function calcTreatmentEnd(startDate) {
   const d = new Date(startDate + 'T00:00:00');
-  d.setDate(d.getDate() + 83);
+  d.setDate(d.getDate() + 84);
   return d.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 

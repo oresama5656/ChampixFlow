@@ -58,7 +58,7 @@ function StampCard({ patient }) {
 
   // 最終週（禁煙達成予定日）
   const treatmentEnd = new Date(start);
-  treatmentEnd.setDate(start.getDate() + 83);
+  treatmentEnd.setDate(start.getDate() + 84);
   const treatmentEndStr = treatmentEnd.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
