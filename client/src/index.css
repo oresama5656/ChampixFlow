@@ -102,7 +102,7 @@
   
   #stamp-card-print-clone {
     display: block !important;
-    position: absolute !important;
+    position: fixed !important;
     left: 0 !important;
     top: 0 !important;
     width: 210mm !important;
@@ -119,7 +119,6 @@
   #stamp-card-print-clone > div {
     width: 100% !important;
     max-width: none !important;
-    height: 100% !important;
     transform: none !important; /* スケールによる端切れを防止 */
     border: none !important;
     border-radius: 0 !important;

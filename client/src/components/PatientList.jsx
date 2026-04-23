@@ -12,15 +12,14 @@ const STATUS_META = {
 function daysSince(dateStr) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + 'T00:00:00');
   return Math.floor((today - d) / (1000 * 60 * 60 * 24));
 }
 
 // 週数に変換
 function daysToWeeks(days) {
-  const w = Math.floor(days / 7);
-  const d = days % 7;
-  return d > 0 ? `第${w + 1}週` : `第${w}週`;
+  const w = Math.floor(Math.max(days, 0) / 7) + 1;
+  return `第${w}週`;
 }
 
 /**

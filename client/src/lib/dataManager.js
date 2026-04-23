@@ -91,14 +91,14 @@ function getEmptyData() {
 
 /** 日付文字列に n 日加算した文字列を返す */
 function addDays(dateStr, n) {
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + 'T00:00:00');
   d.setDate(d.getDate() + n);
   return d.toISOString().split('T')[0];
 }
 
 /** 服用開始日から12週間のスケジュールを計算する */
 export function calcSchedule(startDate) {
-  const start = new Date(startDate);
+  const start = new Date(startDate + 'T00:00:00');
   return {
     start_date: startDate,
     phase1_end: addDays(start, 2),   // Day1-3終了
@@ -126,7 +126,8 @@ export function calcStatus(patient, latestDispensing) {
   if (today > treatmentEnd && latestDispensing) return 'completed';
   if (!latestDispensing) return 'active';
 
-  const nextDate = new Date(calcNextDate(latestDispensing.dispense_date, latestDispensing.days));
+  const nextDateISO = calcNextDate(latestDispensing.dispense_date, latestDispensing.days);
+  const nextDate = new Date(nextDateISO + 'T00:00:00');
   const diffDays = Math.floor((today - nextDate) / (1000 * 60 * 60 * 24));
   if (diffDays >= 3) return 'dropout_concern';
 
@@ -187,11 +188,12 @@ export function registerPatient(data, { name, start_date, memo, days }) {
     updated_at: new Date().toISOString(),
   };
   // 初回用として自動追加
+  const parsedDays = parseInt(days, 10);
   const starterDispensing = {
     id: genId() + 1,
     patient_id: patientId,
     dispense_date: start_date,
-    days: days ? parseInt(days, 10) : 14,
+    days: isNaN(parsedDays) ? 14 : parsedDays,
     is_starter: 1,
     memo: '初回スターターキット自動登録',
     week: 1,
@@ -204,14 +206,17 @@ export function registerPatient(data, { name, start_date, memo, days }) {
 
 /** 交付を追加 */
 export function addDispensing(data, patientId, { dispense_date, days, is_starter, memo, week }) {
+  const parsedDays = parseInt(days, 10);
+  const parsedWeek = parseInt(week, 10);
+  
   const newDisp = {
     id: genId(),
     patient_id: patientId,
     dispense_date,
-    days,
+    days: isNaN(parsedDays) ? 14 : parsedDays,
     is_starter: is_starter ? 1 : 0,
     memo: memo || '',
-    week: week ? parseInt(week, 10) : null,
+    week: isNaN(parsedWeek) ? null : parsedWeek,
     created_at: new Date().toISOString(),
   };
   data.dispensings.push(newDisp);
@@ -220,20 +225,25 @@ export function addDispensing(data, patientId, { dispense_date, days, is_starter
 
 /** 患者の visible をトグル */
 export function toggleVisible(data, patientId) {
-  const p = data.patients.find(x => x.id === patientId);
+  const p = data.patients.find(x => String(x.id) === String(patientId));
   if (p) {
     p.visible = p.visible === 1 ? 0 : 1;
     p.updated_at = new Date().toISOString();
+  } else {
+    console.warn(`toggleVisible: patientId ${patientId} not found`);
   }
   return data;
 }
 
 /** 患者をアーカイブ */
 export function archivePatient(data, patientId) {
-  const p = data.patients.find(x => x.id === patientId);
+  const p = data.patients.find(x => String(x.id) === String(patientId));
   if (p) {
     p.status = 'archived';
     p.updated_at = new Date().toISOString();
+    console.log(`archivePatient: Successfully archived ${patientId}`);
+  } else {
+    console.warn(`archivePatient: patientId ${patientId} not found`);
   }
   return data;
 }
