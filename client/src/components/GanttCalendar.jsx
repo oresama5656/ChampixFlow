@@ -53,42 +53,14 @@ function GanttCalendar({ patients, ganttData }) {
     return out;
   }, [ganttData, visiblePatients, visibleIds]);
 
-  // 日付枠の中に「1.0mg予約数」を表示するためのカスタムレンダラー
-  const reserveMap = ganttData?.reserveMap || {};
-  const maxReserve = useMemo(() => {
-    const vals = Object.values(reserveMap);
-    return vals.length > 0 ? Math.max(...vals, 1) : 1;
-  }, [reserveMap]);
-
+  // 日付枠のレンダラー（シンプルに日付のみ表示）
   const renderDayCell = (arg) => {
-    const dStr = arg.date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }); 
-    const count = reserveMap[dStr] || 0;
-    
-    // 在庫ヒートマップカラー
-    let badgeClass = 'hidden';
-    if (count > 0) {
-      const intensity = count / maxReserve;
-      let bg = 'bg-brand-500';
-      if (intensity <= 0.4) bg = 'bg-brand-500/40 text-brand-700';
-      else if (intensity <= 0.7) bg = 'bg-brand-500/70 text-white';
-      else bg = 'bg-brand-500 text-white';
-      
-      badgeClass = `absolute bottom-1 right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-sm ${bg} shadow-sm`;
-    }
-
     return (
-      <div className="w-full h-full relative p-1 min-h-[80px]">
+      <div className="w-full h-full p-1 min-h-[80px]">
         {/* 日付番号 */}
         <div className={`text-right text-xs ${arg.isToday ? 'text-brand-500 font-bold' : 'text-slate-500'}`}>
           {arg.dayNumberText.replace('日', '')}
         </div>
-        
-        {/* 1.0mg予約 在庫バッジ */}
-        {count > 0 && (
-          <div className={badgeClass} title={`1.0mg: ${count}錠 予約`}>
-            {count}
-          </div>
-        )}
       </div>
     );
   };
@@ -130,9 +102,6 @@ function GanttCalendar({ patients, ganttData }) {
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-4 h-3 rounded bg-danger-500 inline-block" /> 離脱懸念
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-4 h-3 rounded bg-brand-500/40 inline-block" /> 1.0mg予約（右下数値）
         </span>
       </div>
 

@@ -183,8 +183,8 @@ export function buildPatients(data) {
   });
 }
 
-/** 患者登録（スターターキット自動追加付き） */
-export function registerPatient(data, { name, start_date, memo, days }) {
+/** 患者登録（スターターキットなどの自動追加付き） */
+export function registerPatient(data, { name, start_date, memo, days, is_starter }) {
   const patientId = genId();
   const newPatient = {
     id: patientId,
@@ -203,8 +203,8 @@ export function registerPatient(data, { name, start_date, memo, days }) {
     patient_id: patientId,
     dispense_date: start_date,
     days: isNaN(parsedDays) ? 14 : parsedDays,
-    is_starter: 1,
-    memo: '初回スターターキット自動登録',
+    is_starter: is_starter ? 1 : 0,
+    memo: '初回登録時の自動登録',
     week: 1,
     created_at: new Date().toISOString(),
   };
@@ -276,7 +276,6 @@ export function getDispensings(data, patientId) {
 export function buildGanttData(data) {
   const activePatients = data.patients.filter(p => p.status !== 'archived');
   const bars = [];
-  const reserveMap = {};
 
   activePatients.forEach(p => {
     const pDisp = data.dispensings
@@ -324,22 +323,9 @@ export function buildGanttData(data) {
       });
     }
 
-    // 在庫ヒートマップ：維持期間（Day8〜12週）の1.0mg×2錠/日を集計
-    const mStart = new Date(schedule.maintenance_start + 'T00:00:00');
-    const tEnd = new Date(schedule.treatment_end + 'T00:00:00');
-    if (isNaN(mStart.getTime()) || isNaN(tEnd.getTime())) return;
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    let cur = new Date(Math.max(mStart.getTime(), today.getTime()));
-    while (cur <= tEnd) {
-      const key = cur.toISOString().split('T')[0];
-      reserveMap[key] = (reserveMap[key] || 0) + 2;
-      cur.setDate(cur.getDate() + 1);
-    }
   });
 
-  return { bars, reserveMap };
+  return { bars };
 }
 
 // -----------------------------------------------

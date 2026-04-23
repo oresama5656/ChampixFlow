@@ -81,104 +81,104 @@
     margin: 0;
   }
   
-  body.printing-stamp-card {
-    width: 210mm !important;
-    min-height: 148.5mm !important; 
-    overflow: visible !important;
-    background: white !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  
-  /* 全体的に背景色設定を強制 */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
+}
 
-  body.printing-stamp-card > *:not(#stamp-card-print-clone) {
-    display: none !important;
-  }
-  
-  #stamp-card-print-clone {
-    display: block !important;
-    position: absolute !important; /* fixedよりabsoluteの方がPDF出力時に安定することがある */
-    left: 0 !important;
-    top: 0 !important;
-    width: 210mm !important;
-    height: 148.5mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    z-index: 9999 !important;
-    visibility: visible !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
-    max-width: none !important; /* インラインスタイルを上書き */
-  }
-  
-  /* カード本体の印刷用スタイル */
-  #stamp-card-print-clone > div {
-    width: 100% !important;
-    height: 100% !important; /* A5の高さに合わせる */
-    max-width: none !important;
-    transform: none !important; /* スケールによる端切れを防止 */
-    border: none !important;
-    border-radius: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
+/* 印刷用クローン要素のスタイル（画面上のプレビュー時・印刷時共通）*/
+body.printing-stamp-card {
+  width: 210mm !important;
+  min-height: 148.5mm !important; 
+  overflow: visible !important;
+  background: white !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
 
-  /* 背景印刷がオフの場合に備えて、白文字はすべて濃い色に強制 */
-  #stamp-card-print-clone * {
-    visibility: visible !important;
-    color: #1a1a1a !important; /* ほぼ黒 */
-    border-color: #999 !important;
-  }
+/* 全体的に背景色設定を強制 */
+body.printing-stamp-card * {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
 
-  /* ただし、背景色があるヘッダー内の文字は今のまま（背景が出るなら白文字で良い） */
-  #stamp-card-print-clone .bg-indigo-600 *,
-  #stamp-card-print-clone .bg-indigo-600 {
-    background-color: #4f46e5 !important;
-    color: white !important;
-  }
+body.printing-stamp-card > *:not(#stamp-card-print-clone) {
+  display: none !important;
+}
 
-  /* 背景がどうしても出ないブラウザへのフォールバック：ヘッダーに下線を引く */
-  #stamp-card-print-clone .bg-indigo-600 {
-    border-bottom: 2px solid #4f46e5 !important;
-    padding-top: 1.5rem !important;
-    padding-bottom: 1.5rem !important;
-  }
+#stamp-card-print-clone {
+  display: block !important;
+  position: absolute !important; 
+  left: 0 !important;
+  top: 0 !important;
+  width: 210mm !important;
+  height: 148.5mm !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: white !important;
+  z-index: 9999 !important;
+  visibility: visible !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  max-width: none !important; /* インラインスタイルを上書き */
+}
 
-  /* グリッドの間隔と高さの最適化 */
-  #stamp-card-print-clone .grid {
-    gap: 0.5rem !important;
-  }
+/* カード本体の印刷用スタイル */
+#stamp-card-print-clone > div {
+  width: 100% !important;
+  height: 100% !important; /* A5の高さに合わせる */
+  max-width: none !important;
+  transform: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
 
-  /* 重ねスタンプ（レイヤードチェックマーク） */
-  .stamp-container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.5rem;
-  }
+/* 背景印刷がオフの場合に備えて、白文字はすべて濃い色に強制 */
+#stamp-card-print-clone * {
+  visibility: visible !important;
+  color: #1a1a1a !important; 
+  border-color: #999 !important;
+}
 
-  .stamp-check-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-15deg);
-    font-size: 1.8rem !important;
-    font-weight: bold !important;
-    color: rgba(16, 185, 129, 0.6) !important; /* 透明度のあるEmerald */
-    pointer-events: none;
-    z-index: 10;
-    white-space: nowrap;
-    border: 2px solid rgba(16, 185, 129, 0.4);
-    border-radius: 8px;
-    padding: 0 4px;
-    line-height: 1;
-  }
+/* ヘッダー内の文字は今のまま */
+#stamp-card-print-clone .bg-indigo-600 *,
+#stamp-card-print-clone .bg-indigo-600 {
+  background-color: #4f46e5 !important;
+  color: white !important;
+}
+
+#stamp-card-print-clone .bg-indigo-600 {
+  border-bottom: 2px solid #4f46e5 !important;
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+}
+
+#stamp-card-print-clone .grid {
+  gap: 0.5rem !important;
+}
+
+/* 重ねスタンプ（レイヤードチェックマーク） */
+.stamp-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+}
+
+.stamp-check-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  font-size: 1.8rem !important;
+  font-weight: bold !important;
+  color: rgba(16, 185, 129, 0.6) !important; 
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+  border: 2px solid rgba(16, 185, 129, 0.4);
+  border-radius: 8px;
+  padding: 0 4px;
+  line-height: 1;
 }

@@ -10,6 +10,7 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
     name: '',
     start_date: today,
     days: 14,
+    is_starter: true,
     memo: '',
   });
   const [registered, setRegistered] = useState(null); // 登録後プレビュー用
@@ -23,6 +24,7 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
         name: '',
         start_date: today,
         days: 14,
+        is_starter: true,
         memo: '',
       });
     }
@@ -115,6 +117,20 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
               className="input"
             />
           </div>
+
+          {/* スターターキットフラグ */}
+          <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-surface-600 bg-surface-700/50 hover:bg-surface-700 transition">
+            <input
+              type="checkbox"
+              checked={form.is_starter}
+              onChange={e => setForm(f => ({ ...f, is_starter: e.target.checked }))}
+              className="w-4 h-4 accent-indigo-500 rounded"
+            />
+            <span className="text-sm text-slate-200">
+              スターターキットを交付<br/>
+              <span className="text-[10px] text-slate-400">0.5mg×11錠 + 1.0mg×3錠（標準の初回セット）</span>
+            </span>
+          </label>
 
           {/* メモ */}
           <div>
