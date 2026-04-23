@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChampixFlow｜チャンピックス服用管理</title>
+    <meta name="description" content="チャンピックス（バレニクリン）の服用スケジュール管理と在庫予測のための薬剤師支援ツール" />
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      /* 印刷時スタイル：A5横（210mm × 148mm）でスタンプカードのみ表示 */
+      @media print {
+        @page { size: A5 landscape; margin: 0; }
+        body > *:not(#stamp-card-print) { display: none !important; }
+        #stamp-card-print {
+          display: block !important;
+          position: fixed;
+          top: 0; left: 0;
+          width: 210mm;
+          height: 148mm;
+          background: white;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-surface-900 text-white font-sans">
+    <div id="root"></div>
+    <!-- スタンプカード印刷エリア（非表示、印刷時のみ表示） -->
+    <div id="stamp-card-print" style="display:none;"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
