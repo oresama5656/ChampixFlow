@@ -68,7 +68,11 @@ function PatientList({ patients, onToggleVisible, onArchive, onDispense }) {
           return (
             <li
               key={patient.id}
-              onClick={() => setSelectedId(patient.id)}
+              onClick={(e) => {
+                // ボタンのクリック、またはボタン内の要素（svg等）のクリックなら無視する
+                if (e.target.closest('button')) return;
+                setSelectedId(patient.id);
+              }}
               className={`px-4 py-3 transition-colors duration-150 cursor-pointer ${
                 isHidden ? 'opacity-40' : 'hover:bg-surface-700/50'
               }`}
@@ -90,17 +94,23 @@ function PatientList({ patients, onToggleVisible, onArchive, onDispense }) {
               </div>
 
               {/* ボタン群（クリックイベントが親の li に伝播しないよう stopPropagation する） */}
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5" onClick={e => e.stopPropagation()}>
                 {/* 来局ボタン */}
                 <button
-                  onClick={(e) => { e.stopPropagation(); setSelectedId(patient.id); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setSelectedId(patient.id); 
+                  }}
                   className="btn-primary text-xs py-1 px-2.5"
                 >
                   来局記録
                 </button>
                 {/* 表示/非表示トグル */}
                 <button
-                  onClick={(e) => { e.stopPropagation(); onToggleVisible(patient.id); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    onToggleVisible(patient.id); 
+                  }}
                   title={isHidden ? 'カレンダーに表示' : 'カレンダーから非表示'}
                   className="btn-ghost text-xs py-1 px-2"
                 >
@@ -119,7 +129,10 @@ function PatientList({ patients, onToggleVisible, onArchive, onDispense }) {
                 </button>
                 {/* アーカイブボタン */}
                 <button
-                  onClick={(e) => { e.stopPropagation(); onArchive(patient.id); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    onArchive(patient.id); 
+                  }}
                   title="履歴へ移動"
                   className="btn-ghost text-xs py-1 px-2 text-slate-500 hover:text-danger-400"
                 >

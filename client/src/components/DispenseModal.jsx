@@ -49,6 +49,10 @@ function DispenseModal({ patient, onClose, onDispense }) {
     const cardEl = document.getElementById('modal-stamp-card');
     if (!cardEl) return;
     
+    // 既存のクローンがあれば削除
+    const existingClone = document.getElementById('stamp-card-print-clone');
+    if (existingClone) existingClone.remove();
+
     const clone = cardEl.cloneNode(true);
     clone.id = 'stamp-card-print-clone';
     document.body.appendChild(clone);
@@ -62,8 +66,8 @@ function DispenseModal({ patient, onClose, onDispense }) {
         if (document.body.contains(clone)) {
           document.body.removeChild(clone);
         }
-      }, 200);
-    }, 200);
+      }, 500); // 待機時間を少し延長
+    }, 300);
   };
 
   return (

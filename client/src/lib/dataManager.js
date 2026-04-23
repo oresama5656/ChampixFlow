@@ -250,7 +250,6 @@ export function archivePatient(data, patientId) {
   if (p) {
     p.status = 'archived';
     p.updated_at = new Date().toISOString();
-    console.log(`archivePatient: Successfully archived ${patientId}`);
   } else {
     console.warn(`archivePatient: patientId ${patientId} not found`);
   }

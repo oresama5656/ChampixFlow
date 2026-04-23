@@ -32,13 +32,16 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
     const cardEl = document.getElementById('register-stamp-card');
     if (!cardEl) return;
     
+    // 既存のクローンがあれば削除
+    const existingClone = document.getElementById('stamp-card-print-clone');
+    if (existingClone) existingClone.remove();
+
     // クローンを作成してbodyに直下配置
     const clone = cardEl.cloneNode(true);
     clone.id = 'stamp-card-print-clone';
     document.body.appendChild(clone);
     document.body.classList.add('printing-stamp-card');
     
-    // refill_managerと同様に、素直なダブルsetTimeoutのみで実装
     setTimeout(() => {
       window.print();
       
@@ -47,8 +50,8 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
         if (document.body.contains(clone)) {
           document.body.removeChild(clone);
         }
-      }, 200);
-    }, 200);
+      }, 500);
+    }, 300);
   };
 
   return (

@@ -75,8 +75,13 @@ function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
   return (
     <div
       id={printId}
-      className="bg-white text-gray-900 rounded-xl overflow-hidden shadow-xl"
-      style={{ width: '100%', maxWidth: '700px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}
+      className="bg-white text-gray-900 rounded-xl overflow-hidden shadow-xl print:shadow-none print:rounded-none"
+      style={{ 
+        width: '100%', 
+        maxWidth: typeof window !== 'undefined' && window.matchMedia && window.matchMedia('print').matches ? 'none' : '700px',
+        margin: '0 auto', 
+        fontFamily: 'Inter, sans-serif' 
+      }}
     >
       {/* ===== 上部: ヘッダー ===== */}
       <div className="bg-indigo-600 text-white px-6 py-4 flex items-start justify-between">
@@ -95,9 +100,9 @@ function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
       </div>
 
       {/* ===== 中央: 12マスのスタンプエリア ===== */}
-      <div className="px-5 py-4">
+      <div className="px-5 py-4 flex-1 flex flex-col min-h-0">
         <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">服用スケジュール</p>
-        <div className="grid grid-cols-6 gap-1.5">
+        <div className="grid grid-cols-6 gap-1.5 flex-1">
           {Array.from({ length: 12 }, (_, i) => {
             const weekNum = i + 1;
             const info = getWeekInfo(patient.start_date, weekNum);
