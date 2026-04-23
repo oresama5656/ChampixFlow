@@ -1,269 +1,202 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
-/**
- * 日付を YYYY-MM-DD 文字列から Date オブジェクトに変換
- */
-function parseDate(str) {
-  return new Date(str + 'T00:00:00');
-}
-
-/**
- * Date を YYYY-MM-DD 文字列に変換
- */
-function toDateStr(date) {
-  return date.toISOString().split('T')[0];
-}
-
-/**
- * その月のすべての日付の配列を生成
- */
-function getDaysInMonth(year, month) {
-  const days = [];
-  const d = new Date(year, month, 1);
-  while (d.getMonth() === month) {
-    days.push(toDateStr(new Date(d)));
-    d.setDate(d.getDate() + 1);
-  }
-  return days;
-}
-
-// ステータスカラーマップ
-const STATUS_COLOR = {
-  active:          'bg-brand-500',
-  dropout_concern: 'bg-danger-500',
-  completed:       'bg-success-500',
+// ステータス別のカラークラス (Tailwind)
+// FullCalendarのイベント要素に適用するクラス名
+const STATUS_EVENT_CLASS = {
+  active:          '!bg-brand-500 !border-brand-500 !text-white',
+  dropout_concern: '!bg-danger-500 !border-danger-500 !text-white',
+  completed:       '!bg-success-500 !border-success-500 !text-white',
 };
 
 /**
- * GanttCalendar – 右ペイン
- * - 1ヶ月単位ページ切り替え
- * - 患者ごとの実線バー（交付済み）＋透明バー（次回予定）
- * - 最下部に在庫集計ヒートマップ（1.0mg錠必要量）
+ * 1か月単位のブロックカレンダー (FullCalendar使用)
  */
 function GanttCalendar({ patients, ganttData }) {
-  const today = new Date();
-  const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-indexed
+  // 表示する患者
+  const visiblePatients = patients.filter(p => p.visible !== 0 && p.status !== 'archived');
+  const visibleIds = visiblePatients.map(p => p.id);
 
-  // 前月・次月移動
-  const goToPrev = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
-    else setViewMonth(m => m - 1);
-  };
-  const goToNext = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
-    else setViewMonth(m => m + 1);
-  };
-  const goToToday = () => {
-    setViewYear(today.getFullYear());
-    setViewMonth(today.getMonth());
-  };
-
-  // 表示する日付一覧
-  const days = useMemo(() => getDaysInMonth(viewYear, viewMonth), [viewYear, viewMonth]);
-
-  // バーの表示を計算
-  const barsPerPatient = useMemo(() => {
-    if (!ganttData?.bars) return {};
-    const map = {};
-    ganttData.bars.forEach(bar => {
-      if (!map[bar.patient_id]) map[bar.patient_id] = [];
-      map[bar.patient_id].push(bar);
+  // FullCalendar に渡すイベント配列の生成
+  const events = useMemo(() => {
+    if (!ganttData?.bars) return [];
+    
+    // id -> patient マップ
+    const patientMap = {};
+    visiblePatients.forEach(p => {
+      patientMap[p.id] = p;
     });
-    return map;
-  }, [ganttData]);
 
-  // 在庫ヒートマップの最大値（正規化用）
+    const out = [];
+    ganttData.bars.forEach(bar => {
+      if (!visibleIds.includes(bar.patient_id)) return;
+      const p = patientMap[bar.patient_id];
+      if (!p) return;
+
+      const isGhost = bar.type === 'ghost';
+      
+      out.push({
+        id: `${bar.patient_id}-${bar.start}-${bar.type}`,
+        title: p.name,
+        start: bar.start,
+        // FullCalendarのendは排他的なのでそのまま使用可（14日分なら startDate + 14days）
+        end: bar.end,
+        allDay: true,
+        extendedProps: {
+          isGhost,
+          status: p.status
+        }
+      });
+    });
+    return out;
+  }, [ganttData, visiblePatients, visibleIds]);
+
+  // 日付枠の中に「1.0mg予約数」を表示するためのカスタムレンダラー
   const reserveMap = ganttData?.reserveMap || {};
   const maxReserve = useMemo(() => {
-    const vals = days.map(d => reserveMap[d] || 0);
-    return Math.max(...vals, 1);
-  }, [days, reserveMap]);
+    const vals = Object.values(reserveMap);
+    return vals.length > 0 ? Math.max(...vals, 1) : 1;
+  }, [reserveMap]);
 
-  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' });
-  // 表示する患者（表示フラグONのもの）
-  const visiblePatients = patients.filter(p => p.visible !== 0 && p.status !== 'archived');
+  const renderDayCell = (arg) => {
+    const dStr = arg.date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }); 
+    const count = reserveMap[dStr] || 0;
+    
+    // 在庫ヒートマップカラー
+    let badgeClass = 'hidden';
+    if (count > 0) {
+      const intensity = count / maxReserve;
+      let bg = 'bg-brand-500';
+      if (intensity <= 0.4) bg = 'bg-brand-500/40 text-brand-700';
+      else if (intensity <= 0.7) bg = 'bg-brand-500/70 text-white';
+      else bg = 'bg-brand-500 text-white';
+      
+      badgeClass = `absolute bottom-1 right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-sm ${bg} shadow-sm`;
+    }
 
-  // セル幅：日数が多いほど小さく
-  const cellW = Math.floor(Math.max(22, Math.min(36, 900 / days.length)));
+    return (
+      <div className="w-full h-full relative p-1 min-h-[80px]">
+        {/* 日付番号 */}
+        <div className={`text-right text-xs ${arg.isToday ? 'text-brand-500 font-bold' : 'text-slate-500'}`}>
+          {arg.dayNumberText.replace('日', '')}
+        </div>
+        
+        {/* 1.0mg予約 在庫バッジ */}
+        {count > 0 && (
+          <div className={badgeClass} title={`1.0mg: ${count}錠 予約`}>
+            {count}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // バー（イベント）のスタイル適用
+  const handleEventClassNames = (arg) => {
+    const { isGhost, status } = arg.event.extendedProps;
+    if (isGhost) {
+      return [
+        '!bg-transparent',
+        '!border-2',
+        '!border-dashed',
+        '!border-brand-400/60',
+        '!text-brand-400',
+        'rounded-sm',
+        'font-bold',
+        'text-xs'
+      ];
+    } else {
+      const colorClass = STATUS_EVENT_CLASS[status] || STATUS_EVENT_CLASS.active;
+      return [
+        ...colorClass.split(' '),
+        'rounded-sm',
+        'font-bold',
+        'text-xs'
+      ];
+    }
+  };
 
   return (
-    <div className="card flex flex-col h-full overflow-hidden">
-      {/* カレンダーヘッダー */}
-      <div className="px-4 py-3 border-b border-surface-700 flex items-center gap-3">
-        <button onClick={goToPrev} className="btn-ghost p-1.5" title="前月">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h2 className="text-sm font-semibold text-slate-200 flex-1 text-center">{monthLabel}</h2>
-        <button onClick={goToNext} className="btn-ghost p-1.5" title="次月">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-        <button onClick={goToToday} className="text-xs text-brand-400 hover:text-brand-300 transition-colors cursor-pointer px-2 py-1 rounded border border-brand-500/30 hover:border-brand-400">
-          今月
-        </button>
-      </div>
-
-      {/* ガントチャート本体（横スクロール可） */}
-      <div className="flex-1 overflow-auto scrollbar-thin">
-        <table className="border-collapse min-w-full" style={{ tableLayout: 'fixed' }}>
-          {/* 日付ヘッダー行 */}
-          <thead>
-            <tr>
-              {/* 患者名列 */}
-              <th className="sticky left-0 z-10 bg-surface-800 text-left px-3 py-2 text-xs font-medium text-slate-400 border-b border-r border-surface-700 w-32 min-w-[8rem]">
-                患者名
-              </th>
-              {days.map(day => {
-                const d = parseDate(day);
-                const isToday = day === toDateStr(today);
-                const isSun = d.getDay() === 0;
-                const isSat = d.getDay() === 6;
-                return (
-                  <th
-                    key={day}
-                    title={day}
-                    style={{ width: cellW, minWidth: cellW }}
-                    className={`
-                      py-1 text-center text-[10px] font-medium border-b border-r border-surface-700
-                      ${isToday ? 'bg-brand-500/30 text-brand-300' : ''}
-                      ${isSun && !isToday ? 'text-danger-400' : ''}
-                      ${isSat && !isToday ? 'text-brand-400' : ''}
-                      ${!isToday && !isSun && !isSat ? 'text-slate-500' : ''}
-                    `}
-                  >
-                    <div>{d.getDate()}</div>
-                    <div className="text-[8px] opacity-70">
-                      {['日','月','火','水','木','金','土'][d.getDay()]}
-                    </div>
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-
-          <tbody>
-            {/* 患者ごとのバー行 */}
-            {visiblePatients.length === 0 && (
-              <tr>
-                <td colSpan={days.length + 1} className="px-4 py-8 text-center text-slate-500 text-sm">
-                  表示中の患者がいません
-                </td>
-              </tr>
-            )}
-            {visiblePatients.map(patient => {
-              const bars = barsPerPatient[patient.id] || [];
-              return (
-                <tr key={patient.id} className="hover:bg-surface-700/30 transition-colors">
-                  {/* 患者名（固定列） */}
-                  <td className="sticky left-0 z-10 bg-surface-800 px-3 py-1.5 text-xs text-slate-300 border-r border-b border-surface-700 truncate w-32 min-w-[8rem]">
-                    {patient.name}
-                  </td>
-                  {/* 日ごとのセル */}
-                  {days.map(day => {
-                    // この日にかかるバーを探す
-                    const solidBar  = bars.find(b => b.type === 'solid' && b.start <= day && day < b.end);
-                    const ghostBar  = bars.find(b => b.type === 'ghost' && b.start <= day && day < b.end);
-                    const isToday = day === toDateStr(today);
-
-                    return (
-                      <td
-                        key={day}
-                        style={{ width: cellW, minWidth: cellW }}
-                        className={`
-                          relative h-8 border-r border-b border-surface-700/50 p-0
-                          ${isToday ? 'bg-brand-500/10' : ''}
-                        `}
-                      >
-                        {solidBar && (
-                          <div
-                            className={`absolute inset-x-0.5 inset-y-1 rounded text-[9px] flex items-center px-0.5 truncate
-                              font-medium text-white shadow-sm cursor-pointer
-                              ${STATUS_COLOR[patient.status] || 'bg-brand-500'}
-                            `}
-                            title={`${patient.name}（交付済み）`}
-                          >
-                            {solidBar.start === day && (
-                              <span className="truncate leading-none">{patient.name}</span>
-                            )}
-                          </div>
-                        )}
-                        {!solidBar && ghostBar && (
-                          <div
-                            className={`absolute inset-x-0.5 inset-y-1 rounded border-2 border-dashed
-                              text-[9px] flex items-center px-0.5 truncate cursor-pointer
-                              border-brand-400/60 text-brand-400/60
-                            `}
-                            title={`${patient.name}（次回予定）`}
-                          >
-                            {ghostBar.start === day && (
-                              <span className="truncate leading-none">{patient.name}</span>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-
-            {/* 在庫集計ヒートマップ行 */}
-            <tr className="bg-surface-800/50">
-              <td className="sticky left-0 z-10 bg-surface-800 px-3 py-1.5 text-[10px] font-semibold text-slate-400 border-r border-t-2 border-surface-600 w-32 min-w-[8rem]">
-                1.0mg予約
-              </td>
-              {days.map(day => {
-                const count = reserveMap[day] || 0;
-                const intensity = count / maxReserve; // 0〜1
-                // 在庫が多いほど濃い色
-                const bg = count === 0
-                  ? 'bg-transparent'
-                  : intensity > 0.7 ? 'bg-brand-500'
-                  : intensity > 0.4 ? 'bg-brand-500/60'
-                  : 'bg-brand-500/30';
-
-                return (
-                  <td
-                    key={day}
-                    style={{ width: cellW, minWidth: cellW }}
-                    className={`border-r border-t-2 border-surface-600 border-b border-surface-700/50 h-8 p-0.5`}
-                    title={count > 0 ? `${day}: 1.0mg×${count}錠予約` : ''}
-                  >
-                    {count > 0 && (
-                      <div className={`w-full h-full rounded-sm ${bg} flex items-center justify-center`}>
-                        <span className="text-[9px] text-white font-bold leading-none">{count}</span>
-                      </div>
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
+    <div className="card flex flex-col h-full overflow-hidden min-w-0 bg-white text-slate-800">
       {/* 凡例 */}
-      <div className="px-4 py-2 border-t border-surface-700 flex items-center gap-4 text-[10px] text-slate-400">
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-2 rounded bg-brand-500 inline-block" />交付済み
+      <div className="px-4 py-3 border-b border-gray-200 flex flex-wrap items-center gap-4 text-xs font-medium text-gray-600 bg-gray-50">
+        <span className="flex items-center gap-1.5">
+          <span className="w-4 h-3 rounded bg-brand-500 inline-block" /> 交付済み（進行中）
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-2 rounded border-2 border-dashed border-brand-400/60 inline-block" />次回予定
+        <span className="flex items-center gap-1.5">
+          <span className="w-4 h-3 rounded border-2 border-dashed border-brand-400/60 inline-block" /> 次回予定
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-2 rounded bg-danger-500 inline-block" />離脱懸念
+        <span className="flex items-center gap-1.5">
+          <span className="w-4 h-3 rounded bg-danger-500 inline-block" /> 離脱懸念
         </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-2 rounded bg-success-500 inline-block" />完了
-        </span>
-        <span className="ml-auto flex items-center gap-1">
-          <span className="w-3 h-2 rounded bg-brand-500/60 inline-block" />在庫集計（1.0mg錠）
+        <span className="flex items-center gap-1.5">
+          <span className="w-4 h-3 rounded bg-brand-500/40 inline-block" /> 1.0mg予約（右下数値）
         </span>
       </div>
+
+      <div className="flex-1 p-4 overflow-auto">
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          events={events}
+          eventClassNames={handleEventClassNames}
+          dayCellContent={renderDayCell}
+          height="100%"
+          locale="ja"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: ''
+          }}
+          buttonText={{
+            today: '今日'
+          }}
+          dayMaxEvents={4}
+          // Tailwindと競合しないよう標準のborderを少し調整
+          firstDay={0} /* 0 = Sunday */
+        />
+      </div>
+
+      <style>{`
+        /* FullCalendar の上書きスタイル */
+        .fc {
+          --fc-border-color: #e2e8f0;
+          --fc-page-bg-color: #ffffff;
+          --fc-neutral-bg-color: #f8fafc;
+          --fc-button-bg-color: #334155;
+          --fc-button-border-color: #334155;
+          --fc-button-hover-bg-color: #1e293b;
+          --fc-button-hover-border-color: #1e293b;
+          --fc-button-active-bg-color: #0f172a;
+          --fc-button-active-border-color: #0f172a;
+        }
+        .fc-theme-standard th {
+          border: 1px solid var(--fc-border-color);
+          padding: 8px 0;
+          font-weight: 500;
+          color: #475569;
+          background: var(--fc-neutral-bg-color);
+        }
+        .fc-theme-standard td {
+          border: 1px solid var(--fc-border-color);
+        }
+        .fc-day-today {
+          background-color: #f0fdf4 !important; /* 今日を少しハイライト */
+        }
+        .fc-daygrid-day-frame {
+          min-height: 80px;
+        }
+        .fc-event {
+          cursor: pointer;
+          padding: 2px 4px;
+          margin-bottom: 2px;
+        }
+        .fc-daygrid-day-top {
+          display: none; /* デフォルトの日付番号を非表示（カスタムレンダラーで表示するため） */
+        }
+      `}</style>
     </div>
   );
 }

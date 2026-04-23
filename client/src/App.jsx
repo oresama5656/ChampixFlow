@@ -1,144 +1,166 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Header from './components/Header.jsx';
 import TabNav from './components/TabNav.jsx';
 import OverviewTab from './components/OverviewTab.jsx';
 import RegisterTab from './components/RegisterTab.jsx';
 import SettingsTab from './components/SettingsTab.jsx';
 import HistoryTab from './components/HistoryTab.jsx';
-
-// アクティブなタブの定義
-const TABS = ['overview', 'register', 'settings', 'history'];
+import FolderSelectScreen from './components/FolderSelectScreen.jsx';
+import {
+  loadData, saveData, buildCSV,
+  loadDirectoryHandle, saveDirectoryHandle,
+  buildPatients, buildGanttData,
+  registerPatient, addDispensing, toggleVisible, archivePatient,
+} from './lib/dataManager.js';
 
 function App() {
+  // フォルダハンドル（null = 未選択）
+  const [dirHandle, setDirHandle] = useState(null);
+  // ローカルデータ（patients, dispensings 配列）
+  const [rawData, setRawData] = useState(null);
+  // 画面状態
   const [activeTab, setActiveTab] = useState('overview');
-  // アクティブ患者リスト（archived以外）
-  const [patients, setPatients] = useState([]);
-  // 履歴（archived）
-  const [archived, setArchived] = useState([]);
-  // ガントチャートデータ（バー + 在庫集計）
-  const [ganttData, setGanttData] = useState({ bars: [], reserveMap: {} });
   const [loading, setLoading] = useState(false);
+  // アプリ起動中フラグ（フォルダ選択完了後）
+  const [appReady, setAppReady] = useState(false);
 
-  // 患者データの再取得
-  const fetchPatients = useCallback(async () => {
-    try {
-      const res = await fetch('/api/patients');
-      const data = await res.json();
-      setPatients(data.filter(p => p.status !== 'archived'));
-      setArchived(data.filter(p => p.status === 'archived'));
-    } catch (e) {
-      console.error('患者データ取得エラー:', e);
-    }
-  }, []);
+  // -----------------------------------------------
+  // rawData から派生データを計算
+  // -----------------------------------------------
+  const patients = rawData ? buildPatients(rawData).filter(p => p.status !== 'archived') : [];
+  const archived = rawData ? buildPatients(rawData).filter(p => p.status === 'archived') : [];
+  const ganttData = rawData ? buildGanttData(rawData) : { bars: [], reserveMap: {} };
 
-  // ガントチャートデータの再取得
-  const fetchGantt = useCallback(async () => {
-    try {
-      const res = await fetch('/api/gantt');
-      const data = await res.json();
-      setGanttData(data);
-    } catch (e) {
-      console.error('ガントデータ取得エラー:', e);
-    }
-  }, []);
-
-  // 初回ロード
+  // -----------------------------------------------
+  // 初回ロード：IndexedDB からフォルダハンドルを復元
+  // -----------------------------------------------
   useEffect(() => {
-    fetchPatients();
-    fetchGantt();
-  }, [fetchPatients, fetchGantt]);
+    (async () => {
+      const handle = await loadDirectoryHandle();
+      if (!handle) return;
+      try {
+        const perm = await handle.queryPermission({ mode: 'readwrite' });
+        if (perm === 'granted') {
+          // 許可済みなら即起動
+          await startApp(handle);
+        } else {
+          // 許可待ち→フォルダ選択画面を「再開モード」で表示
+          setDirHandle(handle);
+        }
+      } catch {
+        // エラー時は通常の選択画面
+      }
+    })();
+  }, []);
 
-  // 患者登録
+  /** フォルダを選択してアプリを起動する */
+  const startApp = async (handle) => {
+    setLoading(true);
+    try {
+      const data = await loadData(handle);
+      setRawData(data);
+      setDirHandle(handle);
+      await saveDirectoryHandle(handle);
+      setAppReady(true);
+    } catch (e) {
+      alert('データの読み込みに失敗しました: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // -----------------------------------------------
+  // データ書き込みヘルパー
+  // -----------------------------------------------
+  const persist = useCallback(async (newData) => {
+    setRawData(newData);
+    await saveData(dirHandle, newData);
+  }, [dirHandle]);
+
+  // -----------------------------------------------
+  // CRUD 操作
+  // -----------------------------------------------
+
+  /** 患者登録 */
   const handleRegister = async (formData) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/patients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        alert(`エラー: ${err.error}`);
-        return null;
-      }
-      const patient = await res.json();
-      await fetchPatients();
-      await fetchGantt();
+      const { data: newData, patient } = registerPatient({ ...rawData }, formData);
+      await persist(newData);
       return patient;
     } catch (e) {
-      alert('登録に失敗しました');
+      alert('登録に失敗しました: ' + e.message);
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-  // 交付（来局）記録
+  /** 交付記録 */
   const handleDispense = async (patientId, formData) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/patients/${patientId}/dispensings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        alert(`エラー: ${err.error}`);
-        return false;
-      }
-      await fetchPatients();
-      await fetchGantt();
+      const { data: newData } = addDispensing({ ...rawData, dispensings: [...rawData.dispensings] }, patientId, formData);
+      await persist(newData);
       return true;
     } catch (e) {
-      alert('交付記録に失敗しました');
+      alert('交付記録に失敗しました: ' + e.message);
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // 患者の表示/非表示トグル
+  /** 表示トグル */
   const handleToggleVisible = async (patientId) => {
     try {
-      await fetch(`/api/patients/${patientId}/toggle-visible`, { method: 'PATCH' });
-      await fetchPatients();
-      await fetchGantt();
+      const newData = toggleVisible({ ...rawData, patients: rawData.patients.map(p => ({ ...p })) }, patientId);
+      await persist(newData);
     } catch (e) {
       console.error('表示トグルエラー:', e);
     }
   };
 
-  // 患者をアーカイブ（離脱確定/完了）
+  /** アーカイブ */
   const handleArchive = async (patientId) => {
     if (!confirm('この患者を履歴に移動しますか？')) return;
     try {
-      await fetch(`/api/patients/${patientId}/archive`, { method: 'PATCH' });
-      await fetchPatients();
-      await fetchGantt();
+      const newData = archivePatient({ ...rawData, patients: rawData.patients.map(p => ({ ...p })) }, patientId);
+      await persist(newData);
     } catch (e) {
       console.error('アーカイブエラー:', e);
     }
   };
 
-  // CSVエクスポート
-  const handleExportCSV = async () => {
-    try {
-      const res = await fetch('/api/export/csv');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `champix_export_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (e) {
-      alert('CSVエクスポートに失敗しました');
-    }
+  /** CSVエクスポート */
+  const handleExportCSV = () => {
+    if (!rawData) return;
+    const csv = buildCSV(rawData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `champix_export_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   };
+
+  // -----------------------------------------------
+  // レンダリング
+  // -----------------------------------------------
+
+  // フォルダ未選択 or アプリ未起動 → フォルダ選択画面
+  if (!appReady) {
+    return (
+      <FolderSelectScreen
+        resumeHandle={dirHandle}
+        onStart={startApp}
+        loading={loading}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-surface-900">
@@ -148,7 +170,7 @@ function App() {
         onTabChange={setActiveTab}
         onExportCSV={handleExportCSV}
       />
-      <main className="flex-1 container mx-auto px-4 py-4 max-w-screen-2xl">
+      <main className="flex-1 container mx-auto px-4 py-4 max-w-screen-2xl min-w-0">
         {activeTab === 'overview' && (
           <OverviewTab
             patients={patients}
@@ -166,13 +188,25 @@ function App() {
             onSuccess={() => setActiveTab('overview')}
           />
         )}
-        {activeTab === 'settings' && <SettingsTab />}
+        {activeTab === 'settings' && (
+          <SettingsTab
+            dirHandle={dirHandle}
+            onChangeFolder={async () => {
+              try {
+                const handle = await window.showDirectoryPicker();
+                await startApp(handle);
+              } catch (e) {
+                if (e.name !== 'AbortError') alert('フォルダの変更に失敗しました: ' + e.message);
+              }
+            }}
+          />
+        )}
         {activeTab === 'history' && (
-          <HistoryTab archived={archived} onRefresh={fetchPatients} />
+          <HistoryTab archived={archived} />
         )}
       </main>
       <footer className="bg-surface-800 border-t border-surface-700 py-3 text-center text-xs text-slate-500">
-        ChampixFlow v1.0 — チャンピックス服用管理システム
+        ChampixFlow v2.0 — チャンピックス服用管理システム
       </footer>
     </div>
   );

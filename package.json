@@ -5,12 +5,10 @@
   "main": "server/index.js",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "node server/index.js",
-    "client": "vite",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "npm run dev"
+    "start": "vite"
   },
   "keywords": [
     "pharmacy",

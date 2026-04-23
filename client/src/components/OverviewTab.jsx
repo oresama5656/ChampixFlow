@@ -8,8 +8,8 @@ import GanttCalendar from './GanttCalendar.jsx';
 function OverviewTab({ patients, ganttData, onToggleVisible, onArchive, onDispense, loading }) {
   return (
     <div
-      className="grid gap-4 h-full"
-      style={{ gridTemplateColumns: '18rem 1fr', minHeight: 'calc(100vh - 160px)' }}
+      className="grid gap-4 h-full min-w-0"
+      style={{ gridTemplateColumns: '18rem minmax(0, 1fr)', minHeight: 'calc(100vh - 160px)' }}
     >
       {/* 左ペイン：患者リスト */}
       <PatientList

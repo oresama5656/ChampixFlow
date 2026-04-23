@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 /**
  * SettingsTab – 薬局情報設定（localStorage保存）
  */
-function SettingsTab() {
+function SettingsTab({ dirHandle, onChangeFolder }) {
   const [form, setForm] = useState({
     name:    '',
     address: '',
@@ -84,6 +84,26 @@ function SettingsTab() {
             {saved ? '✓ 保存しました' : '設定を保存'}
           </button>
         </form>
+
+        {/* データフォルダ設定 */}
+        <div className="mt-6 mb-6 pb-6 border-b border-surface-600">
+          <h3 className="text-sm font-semibold text-slate-300 mb-3">📁 データフォルダ</h3>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 p-3 bg-surface-700 rounded-lg border border-surface-600 text-sm text-slate-300 truncate">
+              {dirHandle ? dirHandle.name : '未選択'}
+            </div>
+            <button
+              type="button"
+              onClick={onChangeFolder}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition"
+            >
+              変更
+            </button>
+          </div>
+          <p className="text-xs text-slate-500 mt-2">
+            患者データは選択したフォルダ内の <code>champix_data.json</code> に保存されます。
+          </p>
+        </div>
 
         {/* 使い方メモ */}
         <div className="mt-6 p-3 bg-surface-700/50 rounded-lg border border-surface-600">
