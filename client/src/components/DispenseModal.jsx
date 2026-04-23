@@ -18,9 +18,10 @@ function DispenseModal({ patient, onClose, onDispense }) {
     e.preventDefault();
     setLoading(true);
     try {
+      const parsedDays = parseInt(form.days, 10);
       await onDispense(patient.id, {
         ...form,
-        days: parseInt(form.days),
+        days: isNaN(parsedDays) ? 14 : parsedDays,
       });
     } catch {
       alert('登録に失敗しました');
@@ -140,7 +141,7 @@ function DispenseModal({ patient, onClose, onDispense }) {
 
           <div className="flex-1 flex items-center justify-center bg-surface-800 rounded-xl border border-surface-700 p-4 print:border-none print:bg-transparent print:p-0">
             {/* スタンプカード自体 */}
-            <div className="w-full">
+            <div id="stamp-card-print" className="w-full">
               <StampCard patient={patient} />
             </div>
           </div>

@@ -18,6 +18,11 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
     const patient = await onRegister(form);
     if (patient) {
       setRegistered(patient);
+      setForm({
+        name: '',
+        start_date: today,
+        memo: '',
+      });
     }
   };
 
