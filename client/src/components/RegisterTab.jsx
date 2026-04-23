@@ -47,8 +47,8 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
         if (document.body.contains(clone)) {
           document.body.removeChild(clone);
         }
-      }, 100);
-    }, 100);
+      }, 200);
+    }, 200);
   };
 
   return (

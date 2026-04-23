@@ -62,8 +62,8 @@ function DispenseModal({ patient, onClose, onDispense }) {
         if (document.body.contains(clone)) {
           document.body.removeChild(clone);
         }
-      }, 100);
-    }, 100);
+      }, 200);
+    }, 200);
   };
 
   return (
