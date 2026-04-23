@@ -1,1 +1,11 @@
 node_modules
+client/dist
+dist
+.DS_Store
+*.local
+
+# データ管理（個人情報流出防止）
+data/
+*.db
+champix_data.json
+.env
