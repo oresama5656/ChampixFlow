@@ -118,15 +118,17 @@ function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
                   第{weekNum}週
                 </p>
                 <p className="text-gray-500 leading-tight mt-0.5">{info.weekStart}</p>
-                <p className="mt-1 font-medium">
-                  {isDone ? (
-                    <span className="text-emerald-600 text-sm">✓ 済</span>
-                  ) : isCurrent ? (
-                    <span className="text-indigo-600">▶ 今ここ</span>
-                  ) : (
-                    <span className="text-gray-300">{weekNum <= 1 ? '0.5mg' : weekNum <= 2 ? '0.5mg' : '1.0mg'}</span>
+                <div className="stamp-container">
+                  <p className="mt-1 font-medium text-gray-700">
+                    {weekNum <= 1 ? '0.5mg' : weekNum <= 2 ? '0.5mg' : '1.0mg'}
+                  </p>
+                  {isDone && (
+                    <span className="stamp-check-overlay text-emerald-600">✓</span>
                   )}
-                </p>
+                  {isCurrent && (
+                    <span className="text-indigo-600 text-[8px] absolute -bottom-1 w-full text-center font-bold">今ここ</span>
+                  )}
+                </div>
               </div>
             );
           })}
