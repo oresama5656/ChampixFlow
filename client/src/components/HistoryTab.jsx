@@ -10,7 +10,7 @@ const STATUS_LABEL = {
 /**
  * HistoryTab – 完了・離脱確定済みの患者アーカイブ
  */
-function HistoryTab({ archived }) {
+function HistoryTab({ archived, onDelete }) {
   return (
     <div className="card p-6">
       <div className="flex items-center justify-between mb-4">
