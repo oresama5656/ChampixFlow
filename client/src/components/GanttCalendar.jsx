@@ -39,7 +39,7 @@ function GanttCalendar({ patients, ganttData }) {
       
       out.push({
         id: `${bar.patient_id}-${bar.start}-${bar.type}`,
-        title: p.name,
+        title: isGhost ? `${p.name}（予定）` : p.name,
         start: bar.start,
         // FullCalendarのendは排他的なのでそのまま使用可（14日分なら startDate + 14days）
         end: bar.end,
@@ -74,7 +74,7 @@ function GanttCalendar({ patients, ganttData }) {
         '!border-2',
         '!border-dashed',
         '!border-brand-400/60',
-        '!text-brand-400',
+        '!text-brand-700',
         'rounded-sm',
         'font-bold',
         'text-xs'
@@ -88,6 +88,21 @@ function GanttCalendar({ patients, ganttData }) {
         'text-xs'
       ];
     }
+  };
+  
+  // バー（イベント）の中身の描画
+  const renderEventContent = (arg) => {
+    const { isGhost } = arg.event.extendedProps;
+    // ghost（点線）の場合は背景が白に近いので、文字色を強制的に不透明な濃いグレーにする
+    // solid（実線）の場合は背景が濃い色なので、引き続き白文字にする
+    const textColor = isGhost ? '#1e293b' : '#ffffff';
+    return (
+      <div className="fc-event-main-frame px-1 truncate w-full" style={{ color: textColor }}>
+        <span className="fc-event-title font-bold text-[10px] sm:text-xs">
+          {arg.event.title}
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -109,8 +124,10 @@ function GanttCalendar({ patients, ganttData }) {
         <FullCalendar
           plugins={[dayGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
+          eventOrder="title"
           events={events}
           eventClassNames={handleEventClassNames}
+          eventContent={renderEventContent}
           dayCellContent={renderDayCell}
           height="100%"
           locale="ja"

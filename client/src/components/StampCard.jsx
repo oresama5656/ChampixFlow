@@ -78,9 +78,10 @@ function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
       className="bg-white text-gray-900 rounded-xl overflow-hidden shadow-xl print:shadow-none print:rounded-none"
       style={{ 
         width: '100%', 
-        maxWidth: typeof window !== 'undefined' && window.matchMedia && window.matchMedia('print').matches ? 'none' : '700px',
+        maxWidth: printId ? 'none' : '700px', // 印刷時は制限を完全に解除
         margin: '0 auto', 
-        fontFamily: 'Inter, sans-serif' 
+        fontFamily: 'Inter, sans-serif',
+        minHeight: printId ? '148.5mm' : 'auto' // 印刷時はA5の高さを確保
       }}
     >
       {/* ===== 上部: ヘッダー ===== */}

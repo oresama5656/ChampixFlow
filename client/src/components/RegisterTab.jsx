@@ -53,7 +53,7 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
           document.body.removeChild(clone);
         }
       }, 500);
-    }, 300);
+    }, 500); // 500msに調整
   };
 
   return (

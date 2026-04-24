@@ -66,8 +66,8 @@ function DispenseModal({ patient, onClose, onDispense }) {
         if (document.body.contains(clone)) {
           document.body.removeChild(clone);
         }
-      }, 500); // 待機時間を少し延長
-    }, 300);
+      }, 500); 
+    }, 500); // 500msに調整
   };
 
   return (

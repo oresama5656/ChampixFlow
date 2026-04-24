@@ -97,7 +97,12 @@ function addDays(dateStr, n) {
   const d = new Date(isoStr);
   if (isNaN(d.getTime())) return ""; 
   d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0];
+  
+  // toISOString()はUTCになるため、ローカル時刻のYYYY-MM-DDを返す
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /** 服用開始日から12週間のスケジュールを計算する */
