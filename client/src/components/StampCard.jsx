@@ -84,56 +84,87 @@ function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
         minHeight: printId ? '148.5mm' : 'auto' // 印刷時はA5の高さを確保
       }}
     >
-      {/* ===== 上部: ヘッダー ===== */}
-      <div className="bg-indigo-600 text-white px-6 py-4 flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium opacity-80 mb-0.5">チャンピックス服用スケジュール</p>
-          <h1 className="text-xl font-bold tracking-tight">{patient.name} 様</h1>
-          <div className="flex gap-4 mt-1 text-xs opacity-90">
-            <span>開始日: {patient.start_date}</span>
-            <span>達成予定: {treatmentEndStr}</span>
+      {/* ===== 上部: ヘッダー (Modern Gradient) ===== */}
+      <div className="bg-gradient-to-r from-indigo-700 to-indigo-500 text-white px-8 py-6 flex items-start justify-between shadow-inner">
+        <div className="space-y-1">
+          <p className="text-[10px] opacity-80 font-bold tracking-[0.2em] uppercase">お薬服用カレンダー</p>
+          <h2 className="text-3xl font-extrabold tracking-tight">
+            {patient.name} <span className="text-indigo-200 font-medium">様</span>
+          </h2>
+          <div className="flex gap-4 mt-2">
+            <p className="text-[11px] opacity-90 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              開始日: <span className="font-semibold">{patient.start_date}</span>
+            </p>
+            <p className="text-[11px] opacity-90 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-indigo-300"></span>
+              終了予定: <span className="font-semibold">{treatmentEndStr}</span>
+            </p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold">{currentWeek + 1} / 12</p>
-          <p className="text-xs opacity-80">週目</p>
+        <div className="text-right bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-lg">
+          <div className="flex items-baseline justify-end gap-1 text-white">
+            <span className="text-4xl font-black tracking-tighter tabular-nums">{currentWeek + 1}</span>
+            <span className="text-lg font-bold opacity-60">/</span>
+            <span className="text-xl font-bold opacity-80">12</span>
+          </div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-indigo-100 mt-1">現在の進捗</p>
         </div>
       </div>
 
-      {/* ===== 中央: 12マスのスタンプエリア ===== */}
-      <div className="px-5 py-4 flex-1 flex flex-col min-h-0">
-        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">服用スケジュール</p>
-        <div className="grid grid-cols-6 gap-1.5 flex-1">
+      {/* ===== 中央: スタンプエリア (Modern Cards) ===== */}
+      <div className="px-8 py-6 flex-1 flex flex-col min-h-0 bg-slate-50/50">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[12px] font-black text-slate-500 uppercase tracking-[0.15em] flex items-center gap-2">
+            <span className="w-6 h-[1px] bg-slate-300"></span>
+            週ごとの記録
+            <span className="w-12 h-[1px] bg-slate-300"></span>
+          </h3>
+          <div className="flex gap-3">
+             <span className="text-[10px] text-slate-500 flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-100 border border-emerald-400"></span> 完了</span>
+             <span className="text-[10px] text-slate-500 flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-white border border-indigo-400"></span> 進行中</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-6 gap-4 flex-1">
           {Array.from({ length: 12 }, (_, i) => {
             const weekNum = i + 1;
             const info = getWeekInfo(patient.start_date, weekNum);
             const isDone = i < currentWeek;
             const isCurrent = i === currentWeek;
-
+            
             return (
-              <div
+              <div 
                 key={weekNum}
                 className={`
-                  rounded-lg border-2 p-1.5 text-center text-[9px]
-                  ${isDone ? 'bg-emerald-50 border-emerald-400' : ''}
-                  ${isCurrent ? 'bg-indigo-50 border-indigo-500 shadow-sm' : ''}
-                  ${!isDone && !isCurrent ? 'bg-gray-50 border-gray-200' : ''}
+                  relative rounded-2xl p-4 transition-all duration-300 flex flex-col items-center justify-center border-2
+                  ${isDone 
+                    ? 'bg-emerald-50/60 border-emerald-100' 
+                    : isCurrent 
+                      ? 'bg-white border-indigo-400 shadow-xl scale-[1.02] z-10' 
+                      : 'bg-white/80 border-slate-100 shadow-sm'}
                 `}
               >
-                <p className={`font-bold text-[10px] ${isCurrent ? 'text-indigo-600' : isDone ? 'text-emerald-600' : 'text-gray-400'}`}>
+                <span className={`text-[12px] font-black mb-1 ${isDone ? 'text-emerald-600' : isCurrent ? 'text-indigo-600' : 'text-slate-400'}`}>
                   第{weekNum}週
-                </p>
-                <p className="text-gray-500 leading-tight mt-0.5">{info.weekStart}</p>
-                <div className="stamp-container">
-                  <p className="mt-1 font-medium text-gray-700">
-                    {weekNum <= 1 ? '0.5mg' : weekNum <= 2 ? '0.5mg' : '1.0mg'}
-                  </p>
+                </span>
+                <span className="text-[10px] font-bold text-slate-500">{info.weekStart}</span>
+                
+                <div className="relative stamp-container w-full min-h-[2rem] flex items-center justify-center mt-1">
                   {isDone && (
-                    <span className="stamp-check-overlay text-emerald-600">✓</span>
+                    <div className="stamp-check-overlay text-emerald-500 text-3xl drop-shadow-sm">✓</div>
                   )}
-                  {isCurrent && (
-                    <span className="text-indigo-600 text-[8px] absolute -bottom-1 w-full text-center font-bold">今ここ</span>
-                  )}
+                </div>
+
+                {isCurrent && (
+                  <div className="absolute -bottom-2 px-3 py-1 bg-indigo-500 text-white text-[9px] font-black rounded-full shadow-md animate-pulse">
+                    今ここ
+                  </div>
+                )}
+                
+                {/* 装飾用のドット */}
+                <div className="absolute top-2 right-2 flex gap-0.5">
+                  <div className={`w-1 h-1 rounded-full ${isDone ? 'bg-emerald-300' : 'bg-slate-200'}`}></div>
                 </div>
               </div>
             );
@@ -141,15 +172,20 @@ function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
         </div>
       </div>
 
-      {/* ===== 下部: 薬局情報 ===== */}
-      <div className="bg-gray-50 border-t border-gray-200 px-5 py-3 flex items-start justify-between gap-4">
+      {/* ===== 下部: 薬局情報 (Premium Footer) ===== */}
+      <div className="px-8 py-5 bg-white border-t border-slate-100 flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">吸いたくなったら</p>
-          <p className="text-[11px] text-gray-700 leading-relaxed">{pharmacyTip}</p>
+          <p className="text-[12px] font-bold text-slate-700 mb-1 flex items-center gap-2">
+            <span className="p-1 bg-amber-100 rounded-lg text-sm">💡</span>
+            アドバイス
+          </p>
+          <p className="text-[11px] text-slate-500 leading-relaxed max-w-lg">
+            {pharmacyTip}
+          </p>
         </div>
-        <div className="text-right shrink-0">
-          <p className="text-xs font-bold text-gray-700">{pharmacyName}</p>
-          <p className="text-[10px] text-gray-500">☎ {pharmacyTel}</p>
+        <div className="text-right border-l border-slate-100 pl-8">
+          <p className="text-[14px] font-black text-slate-800 tracking-tight">{pharmacyName}</p>
+          <p className="text-[11px] text-slate-400 font-bold font-mono mt-0.5">☎ {pharmacyTel}</p>
         </div>
       </div>
     </div>

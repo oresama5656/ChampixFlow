@@ -140,6 +140,9 @@ function DispenseModal({ patient, onClose, onDispense }) {
                 className="input"
                 placeholder="例: 4"
               />
+              <p className="text-[10px] text-indigo-400 mt-1">
+                ※ 指定した週数を起点に全体のスケジュール（開始日）を自動補正します。
+              </p>
             </div>
 
             {/* スターターキットフラグ */}

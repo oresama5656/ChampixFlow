@@ -234,6 +234,25 @@ export function addDispensing(data, patientId, { dispense_date, days, is_starter
     created_at: new Date().toISOString(),
   };
   data.dispensings.push(newDisp);
+
+  // 患者データの更新（スタンプカードとスケジュールの同期）
+  const targetPatient = data.patients.find(p => String(p.id) === String(patientId));
+  if (targetPatient && !isNaN(parsedWeek)) {
+    targetPatient.latest_week = parsedWeek;
+
+    // 来局遅延に合わせてスケジュール（開始日）を自動調整する
+    // week 1 なら dispense_date がそのまま開始日になる
+    // week 2 なら dispense_date - 7日が開始日になる
+    const offsetDays = (parsedWeek - 1) * 7;
+    const adjustedStart = addDays(dispense_date, -offsetDays);
+    
+    if (adjustedStart !== targetPatient.start_date) {
+      console.log(`スケジュール調整: ${targetPatient.start_date} -> ${adjustedStart} (第${parsedWeek}週起点)`);
+      targetPatient.start_date = adjustedStart;
+      targetPatient.updated_at = new Date().toISOString();
+    }
+  }
+
   return { data, dispensing: newDisp };
 }
 
