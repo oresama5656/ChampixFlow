@@ -5,7 +5,7 @@ import path from 'path';
   const browser = await chromium.launch();
   const page = await browser.newPage();
   
-  await page.goto('http://localhost:5718');
+  await page.goto('http://localhost:5717');
   
   // Inject mock handle and trigger startApp
   await page.evaluate(async () => {

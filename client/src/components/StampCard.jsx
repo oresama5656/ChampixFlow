@@ -92,11 +92,11 @@ function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
             {patient.name} <span className="text-indigo-200 font-medium">様</span>
           </h2>
           <div className="flex gap-4 mt-2">
-            <p className="text-[11px] opacity-90 flex items-center gap-1.5">
+            <p className="text-[11px] opacity-90 flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
               <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
               開始日: <span className="font-semibold">{patient.start_date}</span>
             </p>
-            <p className="text-[11px] opacity-90 flex items-center gap-1.5">
+            <p className="text-[11px] opacity-90 flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
               <span className="w-2 h-2 rounded-full bg-indigo-300"></span>
               終了予定: <span className="font-semibold">{treatmentEndStr}</span>
             </p>

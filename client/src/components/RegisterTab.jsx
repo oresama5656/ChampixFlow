@@ -56,6 +56,10 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
     }, 500); // 500msに調整
   };
 
+  const handlePrintBag = () => {
+    window.open('/starterkit.pdf', '_blank');
+  };
+
   return (
     <div className="max-w-xl mx-auto">
       <div className="card p-6">
@@ -118,19 +122,32 @@ function RegisterTab({ onRegister, loading, onSuccess }) {
             />
           </div>
 
-          {/* スターターキットフラグ */}
-          <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-surface-600 bg-surface-700/50 hover:bg-surface-700 transition">
-            <input
-              type="checkbox"
-              checked={form.is_starter}
-              onChange={e => setForm(f => ({ ...f, is_starter: e.target.checked }))}
-              className="w-4 h-4 accent-indigo-500 rounded"
-            />
-            <span className="text-sm text-slate-200">
-              スターターキットを交付<br/>
-              <span className="text-[10px] text-slate-400">0.5mg×11錠 + 1.0mg×3錠（標準の初回セット）</span>
-            </span>
-          </label>
+          <div className="space-y-4">
+            <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-surface-600 bg-surface-700/50 hover:bg-surface-700 transition">
+              <input
+                type="checkbox"
+                checked={form.is_starter}
+                onChange={e => setForm(f => ({ ...f, is_starter: e.target.checked }))}
+                className="w-4 h-4 accent-indigo-500 rounded"
+              />
+              <span className="text-sm text-slate-200">
+                スターターキットを交付<br/>
+                <span className="text-[10px] text-slate-400">0.5mg×11錠 + 1.0mg×3錠（標準の初回セット）</span>
+              </span>
+            </label>
+
+            <button
+              type="button"
+              onClick={handlePrintBag}
+              className="w-full btn-ghost text-xs py-2 px-3 flex items-center justify-center gap-2 border border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10 transition"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" 
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              薬袋印刷
+            </button>
+          </div>
 
           {/* メモ */}
           <div>

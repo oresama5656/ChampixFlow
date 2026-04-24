@@ -70,6 +70,11 @@ function DispenseModal({ patient, onClose, onDispense }) {
     }, 500); // 500msに調整
   };
 
+  const handlePrintBag = () => {
+    // public/starterkit.pdf を別タブで開く
+    window.open('/starterkit.pdf', '_blank');
+  };
+
   return (
     // モーダルオーバーレイ
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
@@ -146,18 +151,21 @@ function DispenseModal({ patient, onClose, onDispense }) {
             </div>
 
             {/* スターターキットフラグ */}
-            <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-surface-600 bg-surface-700/50 hover:bg-surface-700 transition">
-              <input
-                type="checkbox"
-                checked={form.is_starter}
-                onChange={e => setForm(f => ({ ...f, is_starter: e.target.checked }))}
-                className="w-4 h-4 accent-indigo-500 rounded"
-              />
-              <span className="text-sm text-slate-200">
-                スターターキット交付<br/>
-                <span className="text-[10px] text-slate-400">0.5mg×11錠 + 1.0mg×3錠</span>
-              </span>
-            </label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-surface-600 bg-surface-700/50 hover:bg-surface-700 transition">
+                <input
+                  type="checkbox"
+                  checked={form.is_starter}
+                  onChange={e => setForm(f => ({ ...f, is_starter: e.target.checked }))}
+                  className="w-4 h-4 accent-indigo-500 rounded"
+                />
+                <span className="text-sm text-slate-200">
+                  スターターキット交付<br/>
+                  <span className="text-[10px] text-slate-400">0.5mg×11錠 + 1.0mg×3錠</span>
+                </span>
+              </label>
+
+            </div>
 
             {/* メモ */}
             <div>
@@ -183,16 +191,28 @@ function DispenseModal({ patient, onClose, onDispense }) {
         <div className="flex-1 bg-surface-900 p-6 flex flex-col print:p-0 print:bg-white">
           <div className="flex items-center justify-between mb-4 print:hidden">
             <h3 className="text-sm font-semibold text-slate-300">現在の進捗とスタンプカード情報</h3>
-            <button 
-              onClick={handlePrint}
-              className="btn-ghost text-sm py-1.5 px-3 flex items-center gap-1.5 border border-surface-600 hover:border-indigo-500 hover:text-indigo-400"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round"
-                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-              </svg>
-              カードを印刷
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={handlePrintBag}
+                className="btn-ghost text-xs py-1.5 px-3 flex items-center gap-1.5 border border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10 transition"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                薬袋印刷
+              </button>
+              <button 
+                onClick={handlePrint}
+                className="btn-ghost text-xs py-1.5 px-3 flex items-center gap-1.5 border border-surface-600 hover:border-emerald-500 hover:text-emerald-400 transition"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round"
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                カード印刷
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 flex items-center justify-center bg-surface-800 rounded-xl border border-surface-700 p-4 print:border-none print:bg-transparent print:p-0">
