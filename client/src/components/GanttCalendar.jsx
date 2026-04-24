@@ -58,7 +58,7 @@ function GanttCalendar({ patients, ganttData }) {
     return (
       <div className="w-full h-full p-1 min-h-[80px]">
         {/* 日付番号 */}
-        <div className={`text-right text-xs ${arg.isToday ? 'text-brand-500 font-bold' : 'text-slate-500'}`}>
+        <div className={`text-right text-xs ${arg.isToday ? 'text-brand-400 font-bold' : 'text-slate-400'}`}>
           {arg.dayNumberText.replace('日', '')}
         </div>
       </div>
@@ -93,9 +93,9 @@ function GanttCalendar({ patients, ganttData }) {
   // バー（イベント）の中身の描画
   const renderEventContent = (arg) => {
     const { isGhost } = arg.event.extendedProps;
-    // ghost（点線）の場合は背景が白に近いので、文字色を強制的に不透明な濃いグレーにする
+    // ghost（点線）の場合は背景が透過しているので、文字色を明るめのブランドカラーにする
     // solid（実線）の場合は背景が濃い色なので、引き続き白文字にする
-    const textColor = isGhost ? '#1e293b' : '#ffffff';
+    const textColor = isGhost ? '#60a5fa' : '#ffffff';
     return (
       <div className="fc-event-main-frame px-1 truncate w-full" style={{ color: textColor }}>
         <span className="fc-event-title font-bold text-[10px] sm:text-xs">
@@ -106,9 +106,9 @@ function GanttCalendar({ patients, ganttData }) {
   };
 
   return (
-    <div className="card flex flex-col h-full overflow-hidden min-w-0 bg-white text-slate-800">
+    <div className="card flex flex-col h-full overflow-hidden min-w-0 bg-surface-800 text-slate-100 border-surface-700">
       {/* 凡例 */}
-      <div className="px-4 py-3 border-b border-gray-200 flex flex-wrap items-center gap-4 text-xs font-medium text-gray-600 bg-gray-50">
+      <div className="px-4 py-3 border-b border-surface-700 flex flex-wrap items-center gap-4 text-xs font-medium text-slate-400 bg-surface-900/50">
         <span className="flex items-center gap-1.5">
           <span className="w-4 h-3 rounded bg-brand-500 inline-block" /> 交付済み（進行中）
         </span>
@@ -148,28 +148,30 @@ function GanttCalendar({ patients, ganttData }) {
       <style>{`
         /* FullCalendar の上書きスタイル */
         .fc {
-          --fc-border-color: #e2e8f0;
-          --fc-page-bg-color: #ffffff;
-          --fc-neutral-bg-color: #f8fafc;
+          --fc-border-color: #334155; /* slate-700 */
+          --fc-page-bg-color: transparent;
+          --fc-neutral-bg-color: #0f172a; /* slate-900 */
+          --fc-list-event-hover-bg-color: #1e293b;
+          
           --fc-button-bg-color: #334155;
-          --fc-button-border-color: #334155;
+          --fc-button-border-color: #475569;
           --fc-button-hover-bg-color: #1e293b;
-          --fc-button-hover-border-color: #1e293b;
+          --fc-button-hover-border-color: #64748b;
           --fc-button-active-bg-color: #0f172a;
-          --fc-button-active-border-color: #0f172a;
+          --fc-button-active-border-color: #1e293b;
         }
         .fc-theme-standard th {
           border: 1px solid var(--fc-border-color);
           padding: 8px 0;
           font-weight: 500;
-          color: #475569;
+          color: #94a3b8; /* slate-400 */
           background: var(--fc-neutral-bg-color);
         }
         .fc-theme-standard td {
           border: 1px solid var(--fc-border-color);
         }
         .fc-day-today {
-          background-color: #f0fdf4 !important; /* 今日を少しハイライト */
+          background-color: rgba(59, 130, 246, 0.1) !important; /* 今日を少し青くハイライト */
         }
         .fc-daygrid-day-frame {
           min-height: 80px;
@@ -181,6 +183,16 @@ function GanttCalendar({ patients, ganttData }) {
         }
         .fc-daygrid-day-top {
           display: none; /* デフォルトの日付番号を非表示（カスタムレンダラーで表示するため） */
+        }
+        .fc-toolbar-title {
+          font-size: 1.1rem !important;
+          font-weight: 600 !important;
+          color: #f1f5f9 !important;
+        }
+        .fc-button-primary:disabled {
+          background-color: #1e293b !important;
+          border-color: #334155 !important;
+          opacity: 0.5;
         }
       `}</style>
     </div>

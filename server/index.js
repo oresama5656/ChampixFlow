@@ -244,6 +244,16 @@ app.patch('/api/patients/:id/archive', (req, res) => {
 });
 
 // -----------------------------------------------
+// API: 患者完全削除
+// -----------------------------------------------
+app.delete('/api/patients/:id', (req, res) => {
+  db.run(`DELETE FROM patients WHERE id=?`, [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: '削除失敗' });
+    res.json({ message: '完全に削除しました', changes: this.changes });
+  });
+});
+
+// -----------------------------------------------
 // API: 交付履歴一覧取得（患者ごと）
 // -----------------------------------------------
 app.get('/api/patients/:id/dispensings', (req, res) => {

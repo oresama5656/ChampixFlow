@@ -10,7 +10,7 @@ import {
   loadData, saveData, buildCSV,
   loadDirectoryHandle, saveDirectoryHandle,
   buildPatients, buildGanttData,
-  registerPatient, addDispensing, toggleVisible, archivePatient,
+  registerPatient, addDispensing, toggleVisible, archivePatient, deletePatient,
 } from './lib/dataManager.js';
 
 class ErrorBoundary extends React.Component {
@@ -167,6 +167,17 @@ function App() {
     }
   };
 
+  /** 削除 */
+  const handleDelete = async (patientId) => {
+    if (!confirm('この患者データを完全に削除しますか？\nこの操作は取り消せません。')) return;
+    try {
+      const newData = deletePatient({ ...rawData, patients: rawData.patients.map(p => ({ ...p })), dispensings: [...rawData.dispensings] }, patientId);
+      await persist(newData);
+    } catch (e) {
+      console.error('削除エラー:', e);
+    }
+  };
+
   /** CSVエクスポート */
   const handleExportCSV = () => {
     if (!rawData) return;
@@ -237,7 +248,7 @@ function App() {
           />
         )}
         {activeTab === 'history' && (
-          <HistoryTab archived={archived} />
+          <HistoryTab archived={archived} onDelete={handleDelete} />
         )}
       </main>
       <footer className="bg-surface-800 border-t border-surface-700 py-3 text-center text-xs text-slate-500">

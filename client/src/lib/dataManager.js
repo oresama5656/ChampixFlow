@@ -280,6 +280,19 @@ export function archivePatient(data, patientId) {
   return data;
 }
 
+/** 患者を完全に削除 */
+export function deletePatient(data, patientId) {
+  const pIdx = data.patients.findIndex(p => String(p.id) === String(patientId));
+  if (pIdx !== -1) {
+    data.patients.splice(pIdx, 1);
+    // 紐付く交付履歴も削除
+    data.dispensings = data.dispensings.filter(d => String(d.patient_id) !== String(patientId));
+  } else {
+    console.warn(`deletePatient: patientId ${patientId} not found`);
+  }
+  return data;
+}
+
 /** 患者の交付履歴一覧を返す（最新順） */
 export function getDispensings(data, patientId) {
   return data.dispensings

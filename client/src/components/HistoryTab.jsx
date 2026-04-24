@@ -32,6 +32,7 @@ function HistoryTab({ archived }) {
                 <th className="text-left px-3 py-2 text-xs font-medium text-slate-400">最終来局日</th>
                 <th className="text-left px-3 py-2 text-xs font-medium text-slate-400">ステータス</th>
                 <th className="text-left px-3 py-2 text-xs font-medium text-slate-400">メモ</th>
+                <th className="w-12"></th>
               </tr>
             </thead>
             <tbody>
@@ -46,6 +47,17 @@ function HistoryTab({ archived }) {
                     </span>
                   </td>
                   <td className="px-3 py-2.5 text-slate-500 text-xs">{p.memo || '—'}</td>
+                  <td className="px-3 py-2.5 text-right">
+                    <button
+                      onClick={() => onDelete(p.id)}
+                      className="text-slate-600 hover:text-danger-400 transition-colors p-1"
+                      title="完全に削除"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

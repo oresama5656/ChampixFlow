@@ -118,6 +118,8 @@ body.printing-stamp-card > *:not(#stamp-card-print-clone) {
   box-sizing: border-box !important;
   max-width: none !important; 
   border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
 /* 子要素のデフォルト動作を阻害しないようにリセット */
@@ -128,27 +130,48 @@ body.printing-stamp-card > *:not(#stamp-card-print-clone) {
   transform: none !important;
 }
 
-/* 汎用的な色は黒に強制するが、ヘッダー内などの意図的な白文字は維持する */
-#stamp-card-print-clone *:not(.text-white):not([class*="text-indigo-"]) {
-  visibility: visible !important;
-  color: #1a1a1a !important; 
+/* 印刷時の配色調整：ヘッダー（最初のdiv）内の文字色は変更しない */
+#stamp-card-print-clone > div:first-child,
+#stamp-card-print-clone > div:first-child * {
+  color: white !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* ヘッダー以外（グリッド、フッター）の文字を黒に強制して視認性を確保 */
+#stamp-card-print-clone > div:not(:first-child),
+#stamp-card-print-clone > div:not(:first-child) * {
+  color: #1a1a1a !important;
   border-color: #999 !important;
 }
 
-/* ヘッダー内の白文字を確実に白くする */
-#stamp-card-print-clone .text-white,
-#stamp-card-print-clone .text-white * {
-  color: white !important;
+/* 内部要素が 700px などで制限されないよう、主要なコンテナの幅を強制 */
+#stamp-card-print-clone,
+#stamp-card-print-clone > div {
+  max-width: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
-/* ヘッダー内の文字は今のまま */
-#stamp-card-print-clone .bg-indigo-600 *,
-#stamp-card-print-clone .bg-indigo-600 {
-  background-color: #4f46e5 !important;
-  color: white !important;
+/* Flexboxを維持したいコンテナの指定 */
+#stamp-card-print-clone .flex {
+  display: flex !important;
+  width: 100% !important;
 }
 
-#stamp-card-print-clone .bg-indigo-600 {
+/* フォームや個別要素の幅を自動に（崩れ防止） */
+#stamp-card-print-clone .flex > div {
+  width: auto !important;
+}
+
+/* 具体的なフッターの左右配置を保護 */
+#stamp-card-print-clone .flex-1 {
+  flex: 1 1 0% !important;
+}
+
+#stamp-card-print-clone div[class*="from-indigo-"] {
   border-bottom: 2px solid #4f46e5 !important;
   padding-top: 1.5rem !important;
   padding-bottom: 1.5rem !important;
