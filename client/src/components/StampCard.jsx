@@ -17,17 +17,30 @@ const WEEKLY_MESSAGES = [
 ];
 
 /**
- * 服用開始日から指定された週の情報を計算する
+ * 患者データと交付履歴に基づいて、指定された週の情報を計算する
  */
-function getWeekInfo(startDate, weekNum) {
-  const start = new Date(startDate + 'T00:00:00');
+function getWeekInfo(patient, weekNum) {
+  const dispensings = patient.dispensings || [];
+  
+  // この週(weekNum)以前で、最も近い「週番号」を持つ交付記録を探す
+  const relevantDisp = [...dispensings]
+    .filter(d => d.week <= weekNum)
+    .sort((a, b) => b.week - a.week)[0];
+
+  // 交付記録があればそれを起点にし、なければ患者の開始日を起点にする
+  const baseDateStr = relevantDisp ? relevantDisp.dispense_date : patient.start_date;
+  const baseWeek = relevantDisp ? relevantDisp.week : 1;
+
+  const start = new Date(baseDateStr + 'T00:00:00');
   const weekStart = new Date(start);
-  weekStart.setDate(start.getDate() + (weekNum - 1) * 7);
+  // 起点からの差分週数だけ加算
+  weekStart.setDate(start.getDate() + (weekNum - baseWeek) * 7);
+  
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 6);
 
   // その週の最初の日の用量を特定
-  const dayOffset = (weekNum - 1) * 7 + 1; // Day番号（1始まり）
+  const dayOffset = (weekNum - 1) * 7 + 1; 
   let dose = '1.0mg × 2回/日';
   if (dayOffset <= 3) dose = '0.5mg × 1回/日';
   else if (dayOffset <= 7) dose = '0.5mg × 2回/日';
@@ -129,7 +142,7 @@ function StampCard({ patient, overrideWeek, printId = "stamp-card-print" }) {
         <div className="grid grid-cols-6 gap-4 flex-1">
           {Array.from({ length: 12 }, (_, i) => {
             const weekNum = i + 1;
-            const info = getWeekInfo(patient.start_date, weekNum);
+            const info = getWeekInfo(patient, weekNum);
             const isDone = i < currentWeek;
             const isCurrent = i === currentWeek;
             

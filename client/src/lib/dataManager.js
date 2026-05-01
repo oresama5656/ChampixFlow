@@ -161,25 +161,33 @@ function genId() {
 export function buildPatients(data) {
   const { patients, dispensings } = data;
   return patients.map(p => {
-    // この患者の最新交付
-    const pDisp = dispensings
+    // この患者の全交付履歴（昇順：古い順）
+    const pDispAll = dispensings
       .filter(d => d.patient_id === p.id)
       .sort((a, b) => {
-        const dateA = a.created_at || a.dispense_date;
-        const dateB = b.created_at || b.dispense_date;
-        return dateB.localeCompare(dateA);
+        const dateA = a.dispense_date;
+        const dateB = b.dispense_date;
+        return dateA.localeCompare(dateB);
       });
-    const latest = pDisp[0] || null;
 
-    const schedule = calcSchedule(p.start_date);
+    // 最新の交付（降順：新しい順の先頭）
+    const latest = [...pDispAll].reverse()[0] || null;
+
+    // 真の開始日（第1週の交付日を優先）
+    const firstDisp = pDispAll.find(d => d.week === 1) || pDispAll[0];
+    const actualStartDate = firstDisp ? firstDisp.dispense_date : p.start_date;
+
+    const schedule = calcSchedule(actualStartDate);
     const next_date = latest ? calcNextDate(latest.dispense_date, latest.days) : null;
-    const status = calcStatus(p, latest);
+    const status = calcStatus({ ...p, start_date: actualStartDate }, latest);
 
     return {
       ...p,
+      start_date: actualStartDate,
       ...schedule,
       next_date,
       status,
+      dispensings: pDispAll, // 履歴を含める
       last_dispense_date: latest?.dispense_date || null,
       last_days: latest?.days || null,
       last_is_starter: latest?.is_starter || 0,
@@ -239,18 +247,8 @@ export function addDispensing(data, patientId, { dispense_date, days, is_starter
   const targetPatient = data.patients.find(p => String(p.id) === String(patientId));
   if (targetPatient && !isNaN(parsedWeek)) {
     targetPatient.latest_week = parsedWeek;
-
-    // 来局遅延に合わせてスケジュール（開始日）を自動調整する
-    // week 1 なら dispense_date がそのまま開始日になる
-    // week 2 なら dispense_date - 7日が開始日になる
-    const offsetDays = (parsedWeek - 1) * 7;
-    const adjustedStart = addDays(dispense_date, -offsetDays);
-    
-    if (adjustedStart !== targetPatient.start_date) {
-      console.log(`スケジュール調整: ${targetPatient.start_date} -> ${adjustedStart} (第${parsedWeek}週起点)`);
-      targetPatient.start_date = adjustedStart;
-      targetPatient.updated_at = new Date().toISOString();
-    }
+    targetPatient.updated_at = new Date().toISOString();
+    // start_date の自動調整は廃止（過去の記録を保護するため）
   }
 
   return { data, dispensing: newDisp };
@@ -317,17 +315,16 @@ export function buildGanttData(data) {
   activePatients.forEach(p => {
     const pDisp = data.dispensings
       .filter(d => d.patient_id === p.id)
-      .sort((a, b) => {
-        const dateA = a.created_at || a.dispense_date;
-        const dateB = b.created_at || b.dispense_date;
-        return dateB.localeCompare(dateA);
-      });
-    const latest = pDisp[0] || null;
-    const schedule = calcSchedule(p.start_date);
+      .sort((a, b) => a.dispense_date.localeCompare(b.dispense_date));
+
+    // 真の開始日
+    const firstDisp = pDisp.find(d => d.week === 1) || pDisp[0];
+    const actualStartDate = firstDisp ? firstDisp.dispense_date : p.start_date;
+    const latest = [...pDisp].reverse()[0] || null;
+    const schedule = calcSchedule(actualStartDate);
     if (!schedule.maintenance_start || !schedule.treatment_end) return; // スケール計算できない場合はスキップ
 
-    const nextDate = latest ? calcNextDate(p.start_date, latest.days) : null;
-    const status = calcStatus(p, latest);
+    const status = calcStatus({ ...p, start_date: actualStartDate }, latest);
 
     // 実線バー（交付済み）
     if (latest) {
